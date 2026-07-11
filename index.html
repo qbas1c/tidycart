@@ -2,12 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f5132">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TidyCart — Shared Grocery List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -31,7 +26,6 @@
     --radius-sm: 12px;
   }
   *{box-sizing:border-box;}
-  html, body{ overscroll-behavior:none; }
   body{
     margin:0;
     background:
@@ -41,12 +35,7 @@
     color:var(--ink);
     font-family:'Inter', sans-serif;
     min-height:100vh;
-    -webkit-user-select:none; user-select:none;
-    -webkit-touch-callout:none;
-    padding-top:env(safe-area-inset-top);
-    padding-bottom:env(safe-area-inset-bottom);
   }
-  input, textarea{ -webkit-user-select:text; user-select:text; }
   #app{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:26px 20px 90px; }
 
   /* ---------- Header ---------- */
@@ -64,7 +53,6 @@
     width:42px; height:42px; border-radius:13px; flex-shrink:0;
     overflow:hidden; box-shadow:0 6px 14px rgba(15,81,50,0.25);
   }
-  .brand .mark img{ width:100%; height:100%; display:block; object-fit:cover; }
   .brand h1{
     font-family:'Manrope', sans-serif; font-weight:800;
     font-size:22px; letter-spacing:-0.3px; margin:0; color:var(--ink); line-height:1.1;
@@ -72,7 +60,7 @@
   .brand .sub{ font-size:12.5px; color:var(--ink-soft); font-weight:500; }
   .status-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .sync-pill{
-    display:flex; align-items:center; gap:7px;
+    display:none; align-items:center; gap:7px;
     font-family:'Inter', sans-serif; font-weight:600; font-size:12px;
     padding:8px 14px; border-radius:30px; background:var(--leaf-light); color:var(--forest);
   }
@@ -98,18 +86,18 @@
   .hero p{ margin:0; color:rgba(11,46,28,0.65); font-size:14px; font-weight:500; }
 
   /* ---------- Category strip ---------- */
-  .cat-strip{ display:flex; gap:12px; overflow-x:auto; padding:4px 2px 22px; scrollbar-width:none; }
+  .cat-strip{ display:flex; justify-content:space-between; gap:6px; overflow-x:auto; padding:4px 2px 22px; scrollbar-width:none; }
   .cat-strip::-webkit-scrollbar{ display:none; }
   .cat-chip{
     display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; cursor:pointer;
   }
   .cat-chip .circle{
-    width:56px; height:56px; border-radius:18px; background:var(--card);
-    display:flex; align-items:center; justify-content:center; font-size:24px;
+    width:72px; height:72px; border-radius:20px; background:var(--card);
+    display:flex; align-items:center; justify-content:center; font-size:32px;
     box-shadow:var(--shadow); transition:transform .12s, box-shadow .12s;
   }
   .cat-chip:hover .circle{ transform:translateY(-3px); box-shadow:var(--shadow-lg); }
-  .cat-chip span.label{ font-size:11px; font-weight:700; color:#0b2e1c; text-align:center; }
+  .cat-chip span.label{ font-size:12px; font-weight:700; color:#0b2e1c; text-align:center; }
 
   /* ---------- Layout ---------- */
   .layout{ display:grid; grid-template-columns:1fr 320px; gap:18px; align-items:start; }
@@ -123,6 +111,9 @@
     font-family:'Manrope', sans-serif; font-weight:800; font-size:17px; letter-spacing:-0.2px;
     margin:0 0 16px; color:var(--ink);
   }
+  .panel-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  .panel-head h2{ margin-bottom:0; }
+  .panel-head .icon-btn{ padding:8px 14px; font-size:11.5px; box-shadow:none; }
 
   /* ---------- Add item ---------- */
   .add-row{ position:relative; margin-bottom:16px; }
@@ -238,7 +229,22 @@
   }
   .trip-card .trip-head{ display:flex; justify-content:space-between; font-family:'Manrope',sans-serif; font-size:13.5px; font-weight:800; margin-bottom:4px; color:var(--forest); }
   .trip-card .trip-meta{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-bottom:8px; }
-  .trip-card .trip-items{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; line-height:1.5; }
+  .trip-card .trip-items{ font-size:12px; color:var(--ink-soft); margin-bottom:6px; line-height:1.5; }
+  .trip-toggle{
+    display:inline-block; font-size:11.5px; font-weight:700; color:var(--forest); cursor:pointer;
+    margin-bottom:8px; text-decoration:underline; text-underline-offset:2px;
+  }
+  .trip-toggle:hover{ color:var(--leaf); }
+  .trip-detail{ margin:0 0 10px; padding-top:8px; border-top:1px dashed rgba(15,81,50,0.25); }
+  .trip-detail-line{
+    display:flex; justify-content:space-between; gap:10px; font-size:11.5px; padding:3px 0; color:var(--forest);
+  }
+  .trip-detail-line .tdl-name{ font-family:'Manrope',sans-serif; font-weight:600; color:var(--ink); }
+  .trip-detail-line .tdl-price{ font-family:'IBM Plex Mono',monospace; font-weight:600; white-space:nowrap; }
+  .trip-detail-total{
+    display:flex; justify-content:space-between; font-family:'Manrope',sans-serif; font-weight:800;
+    font-size:12.5px; color:var(--forest); border-top:1px dashed rgba(15,81,50,0.25); margin-top:6px; padding-top:6px;
+  }
   .trip-card button{
     font-size:12px; padding:7px 14px; border:none; background:var(--forest); color:#fff; border-radius:20px; cursor:pointer; font-weight:700;
   }
@@ -269,7 +275,13 @@
 
   <header>
     <div class="brand">
-      <div class="mark"><img src="icon.svg" alt="TidyCart logo"></div>
+      <div class="mark"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+        <rect width="1024" height="1024" rx="230" fill="#E1F5EE"/>
+        <path d="M330 460 h95 l95 355 h355 l82 -260 h-497" fill="none" stroke="#0F6E56" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="470" cy="900" r="42" fill="none" stroke="#0F6E56" stroke-width="30"/>
+        <circle cx="740" cy="900" r="42" fill="none" stroke="#0F6E56" stroke-width="30"/>
+        <path d="M655 480 l40 40 l80 -80" fill="none" stroke="#0F6E56" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></div>
       <div>
         <h1>TidyCart</h1>
         <div class="sub">household grocery &amp; to-do, sorted fast</div>
@@ -301,7 +313,15 @@
 
     <!-- MAIN LIST -->
     <div class="panel">
-      <h2>The List</h2>
+      <div class="panel-head">
+        <h2>The List</h2>
+        <button class="icon-btn" id="clearListBtn">Clear List</button>
+      </div>
+      <div id="clearListConfirm" style="display:none; margin-bottom:14px; padding:14px 16px; background:#fff0ec; border-radius:14px;">
+        <div style="font-size:12.5px; margin-bottom:10px; color:var(--danger); font-weight:600;">Clear every item on the list? This can't be undone.</div>
+        <button class="icon-btn" id="clearListYes" style="background:var(--danger); margin-right:6px;">Yes, clear it</button>
+        <button class="icon-btn" id="clearListNo" style="background:#fff; color:var(--ink); box-shadow:none; border:1px solid #e2d6d2;">Cancel</button>
+      </div>
       <div class="add-row">
         <input type="text" id="addInput" placeholder="Add an item… e.g. milk, 2 avocados" autocomplete="off">
         <div class="suggest-box" id="suggestBox" style="display:none;"></div>
@@ -346,7 +366,6 @@
 </div>
 
 
-<script type="module" src="firebase-storage.js"></script>
 <script>
 (function(){
   "use strict";
@@ -484,13 +503,16 @@
 
   async function pollRemote(){
     if (dirty) return; // don't clobber an in-flight local write
+    if (!online){ setSyncStatus("offline"); return; }
     const seqAtStart = writeSeq;
-    setSyncStatus(online ? "syncing" : "offline");
+    // Note: deliberately NOT flipping the pill to "Syncing..." here — this poll runs every
+    // 1.5s in the background even when idle, and showing "syncing" on every routine check
+    // made the indicator flicker constantly instead of just calmly staying "Synced".
     const remote = await safeGet("tally:items", true);
     // A local change (e.g. Finish Shopping Trip, a check-off, a qty edit) may have started
     // while this fetch was in flight — if so, this response is stale and must not be applied.
-    if (dirty || writeSeq !== seqAtStart){ setSyncStatus(online ? "syncing" : "offline"); return; }
-    if (remote === null){ setSyncStatus(online ? "synced" : "offline"); return; }
+    if (dirty || writeSeq !== seqAtStart) return;
+    if (remote === null) return; // no data yet, or a transient fetch hiccup — don't flicker over it
     if (remote !== dataHash){
       dataHash = remote;
       state.items = JSON.parse(remote);
@@ -519,7 +541,9 @@
   function renderList(){
     const body = document.getElementById("listBody");
     body.innerHTML = "";
+    document.getElementById("clearListBtn").disabled = state.items.length === 0;
     if (state.items.length === 0){
+      document.getElementById("clearListConfirm").style.display = "none";
       body.innerHTML = `<div class="empty-state"><div class="big">The list is empty</div>Add your first item above — it'll be sorted into the right aisle automatically.</div>`;
       return;
     }
@@ -679,7 +703,7 @@
       total
     };
     state.history.unshift(trip);
-    state.items = state.items.filter(i => !i.checked);
+    state.items = [];
     persistItems(); persistHistory();
     renderList(); renderReceipt(); renderQuickChips();
     finishing = false;
@@ -703,6 +727,31 @@
         <div class="trip-meta">${trip.items.length} item${trip.items.length===1?"":"s"}</div>
         <div class="trip-items">${trip.items.map(i => i.name + (i.qty>1 ? " x"+i.qty : "")).join(", ")}</div>
       `;
+
+      const toggle = document.createElement("div");
+      toggle.className = "trip-toggle";
+      toggle.textContent = "View details";
+
+      const detail = document.createElement("div");
+      detail.className = "trip-detail";
+      detail.style.display = "none";
+      detail.innerHTML = trip.items.map(i => {
+        const lineTotal = (i.price || 0) * (i.qty || 1);
+        const priceText = i.price != null
+          ? (i.qty > 1 ? `${money(i.price)} ea · ${money(lineTotal)}` : money(lineTotal))
+          : "no price logged";
+        return `<div class="trip-detail-line"><span class="tdl-name">${i.name}${i.qty>1 ? " x"+i.qty : ""}</span><span class="tdl-price">${priceText}</span></div>`;
+      }).join("") + `<div class="trip-detail-total"><span>Total</span><span>${money(trip.total)}</span></div>`;
+
+      toggle.addEventListener("click", () => {
+        const open = detail.style.display !== "none";
+        detail.style.display = open ? "none" : "block";
+        toggle.textContent = open ? "View details" : "Hide details";
+      });
+
+      card.appendChild(toggle);
+      card.appendChild(detail);
+
       const actions = document.createElement("div");
       actions.className = "trip-actions";
 
@@ -786,6 +835,19 @@
   });
 
   document.getElementById("historyBtn").addEventListener("click", () => { renderHistory(); document.getElementById("historyModal").classList.add("show"); });
+  document.getElementById("clearListBtn").addEventListener("click", () => {
+    if (state.items.length === 0) return;
+    document.getElementById("clearListConfirm").style.display = "block";
+  });
+  document.getElementById("clearListNo").addEventListener("click", () => {
+    document.getElementById("clearListConfirm").style.display = "none";
+  });
+  document.getElementById("clearListYes").addEventListener("click", () => {
+    state.items = [];
+    persistItems();
+    document.getElementById("clearListConfirm").style.display = "none";
+    renderList(); renderReceipt(); renderQuickChips();
+  });
   document.getElementById("clearHistoryBtn").addEventListener("click", () => {
     if (state.history.length === 0) return;
     document.getElementById("clearHistoryConfirm").style.display = "block";
@@ -808,18 +870,7 @@
 
   // ---------------- INIT ----------------
   setSyncStatus(online ? "syncing" : "offline");
-  (async () => {
-    if (!window.storage){
-      // firebase-storage.js loads as an ES module and may not have attached window.storage yet.
-      await new Promise((resolve) => {
-        window.addEventListener("storage-ready", resolve, { once:true });
-        // Fallback in case the event already fired before this listener attached.
-        setTimeout(() => { if (window.storage) resolve(); }, 50);
-      });
-    }
-    await loadAll();
-    setSyncStatus(online ? "synced" : "offline");
-  })();
+  loadAll().then(() => setSyncStatus(online ? "synced" : "offline"));
 
 })();
 </script>
