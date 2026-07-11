@@ -683,7 +683,7 @@
     const orderedItems = state.aisleOrder.flatMap(cat => state.items.filter(i => i.category === cat));
     orderedItems.forEach(i => {
       const lineTotal = (i.price || 0) * (i.qty || 1);
-      if (i.price) total += lineTotal;
+      if (i.checked && i.price) total += lineTotal;
       const line = document.createElement("div");
       line.className = "receipt-line" + (i.checked ? " checked" : "");
       line.innerHTML = `<span class="rline-name">${i.name}${i.qty>1 ? " x"+i.qty : ""}</span><span class="rline-dots"></span><span class="rline-price">${i.price ? money(lineTotal) : "—"}</span>`;
