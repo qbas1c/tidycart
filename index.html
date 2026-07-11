@@ -55,7 +55,7 @@
   }
   .brand h1{
     font-family:'Manrope', sans-serif; font-weight:800;
-    font-size:22px; letter-spacing:-0.3px; margin:0; color:var(--ink); line-height:1.1;
+    font-size:30px; letter-spacing:-0.5px; margin:0; color:var(--ink); line-height:1.1;
   }
   .brand .sub{ font-size:12.5px; color:var(--ink-soft); font-weight:500; }
   .status-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -83,7 +83,6 @@
     line-height:1.15; margin:0 0 4px; color:#0b2e1c; letter-spacing:-0.5px;
   }
   .hero h2 span{ color:var(--leaf); }
-  .hero p{ margin:0; color:rgba(11,46,28,0.65); font-size:14px; font-weight:500; }
 
   /* ---------- Category strip ---------- */
   .cat-strip{ display:flex; justify-content:space-between; gap:6px; overflow-x:auto; padding:4px 2px 22px; scrollbar-width:none; }
@@ -180,8 +179,7 @@
   /* ---------- Receipt / budget panel ---------- */
   #receipt{ position:sticky; top:20px; padding:0; overflow:hidden; }
   #receipt .receipt-inner{ padding:22px; }
-  #receipt h2{ color:#fff; font-size:19px; letter-spacing:-0.3px; margin-bottom:4px; }
-  #receipt .receipt-sub{ font-size:11.5px; font-weight:600; color:rgba(255,255,255,0.55); margin:-4px 0 16px; letter-spacing:.2px; }
+  #receipt h2{ color:#fff; font-size:24px; letter-spacing:-0.3px; margin-bottom:16px; }
   .promo-band{
     background:linear-gradient(155deg, #146840 0%, var(--forest) 42%, var(--forest-deep) 100%);
     padding:26px 24px 24px; color:#fff; position:relative; overflow:hidden;
@@ -266,6 +264,17 @@
   .modal h3{ font-family:'Manrope',sans-serif; font-weight:800; margin-top:0; font-size:19px; }
   .modal .close-x{ float:right; background:var(--leaf-light); border:none; width:30px; height:30px; border-radius:50%; font-size:15px; cursor:pointer; color:var(--forest); }
 
+  .category-suggest-grid{ display:flex; flex-wrap:wrap; gap:9px; }
+  .suggest-item{
+    display:flex; align-items:center; gap:7px;
+    padding:9px 14px; border-radius:20px; background:var(--leaf-light); color:var(--forest);
+    font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; cursor:pointer;
+    border:1.5px solid transparent; transition:transform .1s, background .15s, border-color .15s;
+  }
+  .suggest-item:hover{ border-color:var(--leaf); transform:translateY(-1px); }
+  .suggest-item.added{ background:var(--forest); color:#fff; }
+  .suggest-item .plus{ font-size:14px; line-height:1; }
+
   ::-webkit-scrollbar{ width:8px; }
   ::-webkit-scrollbar-thumb{ background:#cfe3d6; border-radius:4px; }
 </style>
@@ -295,18 +304,18 @@
 
   <div class="hero">
     <h2>Everything you need,<br><span>sorted automatically.</span></h2>
-    <p>Add items below — TidyCart sorts them by aisle, syncs across every device, and keeps the budget honest.</p>
   </div>
 
   <div class="cat-strip" id="catStrip">
-    <div class="cat-chip" onclick="document.getElementById('cat-Produce')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🥬</div><span class="label">Produce</span></div>
-    <div class="cat-chip" onclick="document.getElementById('cat-Dairy_Eggs')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🥛</div><span class="label">Dairy</span></div>
-    <div class="cat-chip" onclick="document.getElementById('cat-Meat_Seafood')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🍗</div><span class="label">Meat</span></div>
-    <div class="cat-chip" onclick="document.getElementById('cat-Bakery')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🍞</div><span class="label">Bakery</span></div>
-    <div class="cat-chip" onclick="document.getElementById('cat-Frozen')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🧊</div><span class="label">Frozen</span></div>
-    <div class="cat-chip" onclick="document.getElementById('cat-Pantry')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🥫</div><span class="label">Pantry</span></div>
-    <div class="cat-chip" onclick="document.getElementById('cat-Beverages')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🥤</div><span class="label">Drinks</span></div>
-    <div class="cat-chip" onclick="document.getElementById('cat-Household')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🧻</div><span class="label">Household</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Produce')"><div class="circle">🥬</div><span class="label">Produce</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Dairy &amp; Eggs')"><div class="circle">🥛</div><span class="label">Dairy</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Meat &amp; Seafood')"><div class="circle">🍗</div><span class="label">Meat</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Bakery')"><div class="circle">🍞</div><span class="label">Bakery</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Frozen')"><div class="circle">🧊</div><span class="label">Frozen</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Pantry')"><div class="circle">🥫</div><span class="label">Pantry</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Beverages')"><div class="circle">🥤</div><span class="label">Drinks</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Household')"><div class="circle">🧻</div><span class="label">Household</span></div>
+    <div class="cat-chip" onclick="openCategoryModal('Other')"><div class="circle">🛍️</div><span class="label">Other</span></div>
   </div>
 
   <div class="layout">
@@ -323,7 +332,7 @@
         <button class="icon-btn" id="clearListNo" style="background:#fff; color:var(--ink); box-shadow:none; border:1px solid #e2d6d2;">Cancel</button>
       </div>
       <div class="add-row">
-        <input type="text" id="addInput" placeholder="Add an item… e.g. milk, 2 avocados" autocomplete="off">
+        <input type="text" id="addInput" placeholder="Add an item/s..." autocomplete="off">
         <div class="suggest-box" id="suggestBox" style="display:none;"></div>
       </div>
       <div class="chips" id="quickChips"></div>
@@ -334,7 +343,6 @@
     <div class="panel" id="receipt">
       <div class="promo-band">
         <h2>Running Total</h2>
-        <div class="receipt-sub">updates live as you check items off</div>
         <div id="receiptLines"></div>
         <div class="receipt-total"><span>TOTAL</span><span id="receiptTotal">₱0.00</span></div>
       </div>
@@ -365,6 +373,16 @@
   </div>
 </div>
 
+<!-- CATEGORY SUGGESTIONS MODAL -->
+<div class="modal-backdrop" id="categoryModal">
+  <div class="modal">
+    <button class="close-x" data-close="categoryModal">✕</button>
+    <h3 id="categoryModalTitle">Produce</h3>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-8px; margin-bottom:16px;">Tap an item to add it to your list.</p>
+    <div id="categoryItemsList" class="category-suggest-grid"></div>
+  </div>
+</div>
+
 
 <script>
 (function(){
@@ -372,22 +390,58 @@
 
   const CATEGORY_ORDER_DEFAULT = ["Produce","Dairy & Eggs","Meat & Seafood","Bakery","Frozen","Pantry","Beverages","Household","Other"];
   const CATEGORY_KEYWORDS = {
-    "Produce": ["apple","banana","lettuce","tomato","onion","potato","carrot","spinach","avocado","garlic","cucumber","fruit","vegetable","berry","lemon","lime","orange","grape","broccoli","celery","mushroom","cilantro","basil","kale","pear","peach","mango","corn","squash"],
-    "Dairy & Eggs": ["milk","cheese","yogurt","butter","cream","egg","dairy"],
-    "Meat & Seafood": ["chicken","beef","pork","turkey","fish","shrimp","salmon","bacon","sausage","meat","steak","tuna","tilapia"],
-    "Bakery": ["bread","bagel","muffin","cake","tortilla","bun","roll","croissant","pastry","baguette"],
+    "Produce": ["apple","banana","lettuce","tomato","onion","potato","carrot","spinach","avocado","garlic","cucumber","fruit","vegetable","berry","lemon","lime","orange","grape","broccoli","celery","mushroom","cilantro","basil","kale","pear","peach","mango","corn","squash","calamansi","kangkong","sitaw","ampalaya","talong","okra","gabi","ube","kamote","malunggay"],
+    "Dairy & Eggs": ["milk","cheese","yogurt","butter","cream","egg","dairy","margarine"],
+    "Meat & Seafood": ["chicken","beef","pork","turkey","fish","shrimp","salmon","bacon","sausage","meat","steak","tuna","tilapia","bangus","longganisa","tocino","hotdog","hot dog","embutido"],
+    "Bakery": ["bread","bagel","muffin","cake","tortilla","bun","roll","croissant","pastry","baguette","pandesal","ensaymada","donut","doughnut"],
     "Frozen": ["frozen","ice cream","popsicle","frozen pizza","fries"],
     "Beverages": ["juice","soda","water","beer","wine","drink","coffee","tea","kombucha"],
-    "Pantry": ["rice","pasta","beans","flour","sugar","oil","sauce","spice","cereal","oats","canned","soup","snack","chips","nuts","peanut butter","jam","honey","salt","pepper"],
-    "Household": ["paper towel","toilet paper","soap","detergent","shampoo","cleaner","trash bag","tissue","sponge","foil","napkin","batteries"]
+    "Pantry": ["rice","pasta","beans","flour","sugar","oil","sauce","spice","cereal","oats","canned","soup","snack","chips","nuts","peanut butter","jam","honey","salt","pepper","vinegar","noodle","sardine","spam","ketchup"],
+    "Household": ["paper towel","toilet paper","soap","detergent","shampoo","cleaner","trash bag","tissue","sponge","foil","napkin","dishwashing","fabric softener","bleach","freshener"]
   };
 
+  // A few compound item names get miscategorized by plain substring matching (e.g. "Corned Beef"
+  // contains "beef" and would otherwise land under Meat & Seafood instead of the canned-goods
+  // aisle). Checked before the general keyword loop.
+  const CATEGORY_OVERRIDES = { "corned beef": "Pantry", "peanut butter": "Pantry" };
+
+  // The keyword *match priority* is intentionally different from the visual aisle order below:
+  // Frozen is checked first so compound names like "Frozen Shrimp" or "Frozen Longganisa" are
+  // caught by their "frozen" keyword before an earlier category's food-word (e.g. "shrimp") can
+  // grab them instead.
+  const CATEGORY_CHECK_ORDER = ["Frozen","Produce","Dairy & Eggs","Meat & Seafood","Bakery","Pantry","Beverages","Household"];
+
+  // Curated common items shown in the category pop-up, used to top up the list when there
+  // isn't enough purchase history yet. Frequency-based items (from state.frequency) are
+  // always shown first when available; these fill in the rest.
+  const CATEGORY_CURATED = {
+    "Produce": ["Lettuce","Tomato","Onion","Garlic","Potato","Carrot","Banana","Calamansi","Kangkong","Sitaw","Ampalaya","Mango"],
+    "Dairy & Eggs": ["Milk","Eggs","Cheese","Butter","Yogurt","Evaporated Milk","Condensed Milk","Cream Cheese","Margarine","Chocolate Milk"],
+    "Meat & Seafood": ["Chicken","Pork","Beef","Bangus","Tilapia","Shrimp","Tuna","Longganisa","Tocino","Hotdog"],
+    "Bakery": ["Pandesal","Loaf Bread","Tortilla","Bagel","Buns","Ensaymada","Muffin","Croissant","Cake","Donuts"],
+    "Frozen": ["Frozen Fries","Ice Cream","Frozen Pizza","Frozen Vegetables","Frozen Shrimp","Frozen Siomai","Frozen Longganisa","Popsicle","Frozen Dumplings","Frozen Nuggets"],
+    "Pantry": ["Rice","Cooking Oil","Soy Sauce","Vinegar","Salt","Sugar","Instant Noodles","Sardines","Corned Beef","Spam","Ketchup","Peanut Butter"],
+    "Beverages": ["Water","Soft Drinks","Juice","Coffee","Tea","Beer","Powdered Juice","Energy Drink","Iced Tea","Chocolate Drink"],
+    "Household": ["Toilet Paper","Dishwashing Liquid","Detergent","Trash Bag","Tissue","Fabric Softener","Bleach","Sponge","Air Freshener","Aluminum Foil"],
+    "Other": ["Batteries","Light Bulb","Matches","Lighter","Candles","Extension Cord","Umbrella","Ziploc Bags","Rubber Bands","Packing Tape","Glue","Charcoal"]
+  };
+
+  function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  function keywordMatches(name, kw){
+    // Word-boundary-aware: the keyword must start at a word boundary (so "Buns"/"Eggs" still
+    // match the "bun"/"egg" keyword prefix) but can't be hiding inside an unrelated word the
+    // way "oil" used to falsely match inside "foil" or "toilet".
+    return new RegExp("\\b" + escapeRegex(kw)).test(name);
+  }
   function categorize(name){
     const n = name.toLowerCase();
-    for (const cat of CATEGORY_ORDER_DEFAULT){
+    for (const phrase in CATEGORY_OVERRIDES){
+      if (n.includes(phrase)) return CATEGORY_OVERRIDES[phrase];
+    }
+    for (const cat of CATEGORY_CHECK_ORDER){
       const kws = CATEGORY_KEYWORDS[cat];
       if (!kws) continue;
-      for (const kw of kws){ if (n.includes(kw)) return cat; }
+      for (const kw of kws){ if (keywordMatches(n, kw)) return cat; }
     }
     return "Other";
   }
@@ -442,6 +496,21 @@
     if (freq) state.frequency = JSON.parse(freq);
     if (hist) state.history = JSON.parse(hist);
     if (budget) state.budget = JSON.parse(budget);
+
+    // Self-healing migration: items/frequency entries saved before a categorization fix keep
+    // whatever category they were stamped with at the time — fixing the code alone doesn't
+    // retroactively fix already-stored data. Recompute against the current logic on every load
+    // and persist any corrections, so stale data heals itself instead of needing a manual reset.
+    let recategorized = false;
+    for (const item of state.items){
+      const correct = categorize(item.name);
+      if (item.category !== correct){ item.category = correct; recategorized = true; }
+    }
+    for (const key of Object.keys(state.frequency)){
+      const correct = categorize(key);
+      if (state.frequency[key].category !== correct){ state.frequency[key].category = correct; recategorized = true; }
+    }
+    if (recategorized){ persistItems(); persistFrequency(); }
     dataHash = JSON.stringify(state.items);
     renderAll();
   }
@@ -721,10 +790,12 @@
     state.history.forEach(trip => {
       const card = document.createElement("div");
       card.className = "trip-card";
-      const dateStr = new Date(trip.date).toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"});
+      const tripDate = new Date(trip.date);
+      const dateStr = tripDate.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"});
+      const timeStr = tripDate.toLocaleTimeString(undefined, {hour:"numeric", minute:"2-digit"});
       card.innerHTML = `
         <div class="trip-head"><span>${dateStr}</span><span>${money(trip.total)}</span></div>
-        <div class="trip-meta">${trip.items.length} item${trip.items.length===1?"":"s"}</div>
+        <div class="trip-meta">${timeStr} · ${trip.items.length} item${trip.items.length===1?"":"s"}</div>
         <div class="trip-items">${trip.items.map(i => i.name + (i.qty>1 ? " x"+i.qty : "")).join(", ")}</div>
       `;
 
@@ -867,6 +938,60 @@
   document.querySelectorAll(".modal-backdrop").forEach(bd => {
     bd.addEventListener("click", (e) => { if (e.target === bd) bd.classList.remove("show"); });
   });
+
+  // ---------------- CATEGORY SUGGESTIONS MODAL ----------------
+  function normalizeForDedup(s){
+    // Rough English singular/plural folding so "Egg"/"Eggs", "Tomato"/"Tomatoes", etc. are
+    // treated as the same item for de-duplication purposes, without needing a real NLP library.
+    let n = s.toLowerCase().trim();
+    if (n.endsWith("ies") && n.length > 4) n = n.slice(0, -3) + "y";
+    else if (n.endsWith("es") && n.length > 4) n = n.slice(0, -2);
+    else if (n.endsWith("s") && !n.endsWith("ss") && n.length > 3) n = n.slice(0, -1);
+    return n;
+  }
+
+  function openCategoryModal(category){
+    document.getElementById("categoryModalTitle").textContent = category;
+
+    // Prioritize items this household actually buys often (from state.frequency),
+    // then top up with curated common items for that category until there are at least 10.
+    const usedLower = new Set(Object.keys(state.frequency).filter(n => state.frequency[n].category === category)
+      .sort((a,b) => state.frequency[b].count - state.frequency[a].count));
+    const fromFrequency = Array.from(usedLower);
+    const curated = (CATEGORY_CURATED[category] || []);
+    const seenNormalized = new Set(fromFrequency.map(normalizeForDedup));
+    const combined = fromFrequency.slice();
+    for (const name of curated){
+      const lower = name.toLowerCase();
+      const norm = normalizeForDedup(lower);
+      if (!seenNormalized.has(norm)){ combined.push(lower); seenNormalized.add(norm); }
+      if (combined.length >= 12) break;
+    }
+
+    const grid = document.getElementById("categoryItemsList");
+    grid.innerHTML = "";
+    combined.forEach(lower => {
+      // Use the curated/nice-cased version if we have it, otherwise title-case the frequency name.
+      const curatedMatch = curated.find(c => c.toLowerCase() === lower);
+      const displayName = curatedMatch || (lower.charAt(0).toUpperCase() + lower.slice(1));
+      const chip = document.createElement("div");
+      chip.className = "suggest-item";
+      chip.innerHTML = `<span class="plus">+</span><span class="label-text">${displayName}</span>`;
+      chip.addEventListener("click", () => {
+        addItem(displayName, 1);
+        chip.classList.add("added");
+        chip.querySelector(".plus").textContent = "✓";
+        setTimeout(() => {
+          chip.classList.remove("added");
+          chip.querySelector(".plus").textContent = "+";
+        }, 900);
+      });
+      grid.appendChild(chip);
+    });
+
+    document.getElementById("categoryModal").classList.add("show");
+  }
+  window.openCategoryModal = openCategoryModal;
 
   // ---------------- INIT ----------------
   setSyncStatus(online ? "syncing" : "offline");
