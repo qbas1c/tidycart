@@ -114,6 +114,7 @@
   .panel-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
   .panel-head h2{ margin-bottom:0; }
   .panel-head .icon-btn{ padding:8px 14px; font-size:11.5px; box-shadow:none; }
+  .icon-btn.secondary{ background:var(--leaf-light); color:var(--forest); }
 
   /* ---------- Add item ---------- */
   .add-row{ position:relative; margin-bottom:16px; }
@@ -325,7 +326,10 @@
     <div class="panel">
       <div class="panel-head">
         <h2>The List</h2>
-        <button class="icon-btn" id="clearListBtn">Clear List</button>
+        <div style="display:flex; gap:8px;">
+          <button class="icon-btn secondary" id="selectAllBtn">Select All</button>
+          <button class="icon-btn" id="clearListBtn">Clear List</button>
+        </div>
       </div>
       <div id="clearListConfirm" style="display:none; margin-bottom:14px; padding:14px 16px; background:#fff0ec; border-radius:14px;">
         <div style="font-size:12.5px; margin-bottom:10px; color:var(--danger); font-weight:600;">Clear every item on the list? This can't be undone.</div>
@@ -612,6 +616,9 @@
     const body = document.getElementById("listBody");
     body.innerHTML = "";
     document.getElementById("clearListBtn").disabled = state.items.length === 0;
+    const selectAllBtn = document.getElementById("selectAllBtn");
+    selectAllBtn.disabled = state.items.length === 0;
+    selectAllBtn.textContent = (state.items.length > 0 && state.items.every(i => i.checked)) ? "Deselect All" : "Select All";
     if (state.items.length === 0){
       document.getElementById("clearListConfirm").style.display = "none";
       body.innerHTML = `<div class="empty-state"><div class="big">The list is empty</div>Add your first item above — it'll be sorted into the right aisle automatically.</div>`;
@@ -907,6 +914,13 @@
   });
 
   document.getElementById("historyBtn").addEventListener("click", () => { renderHistory(); document.getElementById("historyModal").classList.add("show"); });
+  document.getElementById("selectAllBtn").addEventListener("click", () => {
+    if (state.items.length === 0) return;
+    const shouldSelectAll = !state.items.every(i => i.checked);
+    state.items.forEach(i => { i.checked = shouldSelectAll; });
+    persistItems();
+    renderList(); renderReceipt();
+  });
   document.getElementById("clearListBtn").addEventListener("click", () => {
     if (state.items.length === 0) return;
     document.getElementById("clearListConfirm").style.display = "block";
