@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f5132">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<title>TidyCart — Shared Grocery List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-top:#eefaf1;
+    --bg-bottom:#0f5132;
+    --forest:#0f5132;
+    --forest-deep:#0a3a24;
+    --leaf:#1f9d55;
+    --leaf-light:#e4f7ea;
+    --ink:#152016;
+    --ink-soft:#6b7a6d;
+    --card:#ffffff;
+    --line:#e7f0e9;
+    --amber:#e8823c;
+    --danger:#d9573b;
+    --shadow: 0 10px 30px rgba(15,81,50,0.10);
+    --shadow-lg: 0 20px 45px rgba(15,81,50,0.18);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+  *{box-sizing:border-box;}
+  html, body{ overscroll-behavior:none; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 500px at 20% -10%, rgba(255,255,255,0.9), transparent 60%),
+      linear-gradient(190deg, var(--bg-top) 0%, #cdeedb 28%, #5fae7f 68%, var(--bg-bottom) 100%);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  input, textarea{ -webkit-user-select:text; user-select:text; }
+  #app{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:26px 20px 90px; }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:14px;
+    padding:20px 26px;
+    background:var(--card);
+    border-radius:24px;
+    box-shadow:var(--shadow);
+    margin-bottom:22px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand .mark{
+    width:42px; height:42px; border-radius:13px; flex-shrink:0;
+    overflow:hidden; box-shadow:0 6px 14px rgba(15,81,50,0.25);
+  }
+  .brand .mark img{ width:100%; height:100%; display:block; object-fit:cover; }
+  .brand h1{
+    font-family:'Manrope', sans-serif; font-weight:800;
+    font-size:22px; letter-spacing:-0.3px; margin:0; color:var(--ink); line-height:1.1;
+  }
+  .brand .sub{ font-size:12.5px; color:var(--ink-soft); font-weight:500; }
+  .status-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .sync-pill{
+    display:flex; align-items:center; gap:7px;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:12px;
+    padding:8px 14px; border-radius:30px; background:var(--leaf-light); color:var(--forest);
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--leaf); }
+  .dot.off{ background:var(--danger); }
+  .dot.sync{ background:var(--amber); animation:pulse 1s infinite ease-in-out; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .icon-btn{
+    background:var(--forest); border:none; border-radius:30px;
+    padding:10px 18px; font-family:'Manrope',sans-serif; font-weight:700; font-size:12.5px;
+    cursor:pointer; color:#fff; transition:transform .12s, box-shadow .12s; box-shadow:0 6px 16px rgba(15,81,50,0.28);
+  }
+  .icon-btn:hover{ transform:translateY(-1px); }
+  .icon-btn:active{ transform:scale(.97); }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding:6px 6px 20px; }
+  .hero h2{
+    font-family:'Manrope', sans-serif; font-weight:800; font-size:clamp(24px,4vw,34px);
+    line-height:1.15; margin:0 0 4px; color:#0b2e1c; letter-spacing:-0.5px;
+  }
+  .hero h2 span{ color:var(--leaf); }
+  .hero p{ margin:0; color:rgba(11,46,28,0.65); font-size:14px; font-weight:500; }
+
+  /* ---------- Category strip ---------- */
+  .cat-strip{ display:flex; gap:12px; overflow-x:auto; padding:4px 2px 22px; scrollbar-width:none; }
+  .cat-strip::-webkit-scrollbar{ display:none; }
+  .cat-chip{
+    display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; cursor:pointer;
+  }
+  .cat-chip .circle{
+    width:56px; height:56px; border-radius:18px; background:var(--card);
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+    box-shadow:var(--shadow); transition:transform .12s, box-shadow .12s;
+  }
+  .cat-chip:hover .circle{ transform:translateY(-3px); box-shadow:var(--shadow-lg); }
+  .cat-chip span.label{ font-size:11px; font-weight:700; color:#0b2e1c; text-align:center; }
+
+  /* ---------- Layout ---------- */
+  .layout{ display:grid; grid-template-columns:1fr 320px; gap:18px; align-items:start; }
+  @media (max-width:980px){ .layout{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:var(--card); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:22px;
+  }
+  .panel h2{
+    font-family:'Manrope', sans-serif; font-weight:800; font-size:17px; letter-spacing:-0.2px;
+    margin:0 0 16px; color:var(--ink);
+  }
+
+  /* ---------- Add item ---------- */
+  .add-row{ position:relative; margin-bottom:16px; }
+  .add-row input[type=text]{
+    width:100%; padding:15px 18px 15px 46px; font-size:14.5px; border:none;
+    border-radius:16px; font-family:'Inter',sans-serif; background:var(--leaf-light); color:var(--ink);
+  }
+  .add-row::before{
+    content:"🔍"; position:absolute; left:18px; top:50%; transform:translateY(-50%); font-size:14px; opacity:.7;
+  }
+  .add-row input[type=text]:focus{ outline:2px solid var(--leaf); outline-offset:1px; }
+  .add-row input[type=text]::placeholder{ color:#8fa392; }
+  .suggest-box{
+    position:absolute; top:calc(100% + 6px); left:0; right:0; background:#fff;
+    border-radius:14px; box-shadow:var(--shadow-lg);
+    z-index:5; max-height:220px; overflow-y:auto;
+  }
+  .suggest-box .opt{ padding:11px 16px; font-size:13.5px; cursor:pointer; display:flex; justify-content:space-between; }
+  .suggest-box .opt:hover{ background:var(--leaf-light); }
+  .suggest-box .opt small{ color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .chip{
+    font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:20px; border:1.5px dashed #b9dcc4;
+    background:#fff; cursor:pointer; color:var(--forest);
+  }
+  .chip:hover{ border-color:var(--leaf); border-style:solid; background:var(--leaf-light); }
+  .chips-label{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); width:100%; margin-bottom:2px; }
+
+  /* ---------- List ---------- */
+  .category-group{ margin-bottom:20px; }
+  .category-title{
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:13px; color:var(--forest);
+    display:flex; align-items:center; gap:10px; margin-bottom:8px; text-transform:uppercase; letter-spacing:.4px;
+  }
+  .category-title .rule{ flex:1; height:1px; background:var(--line); }
+  .item-row{
+    display:grid; grid-template-columns:26px 1fr auto auto 30px; align-items:center; gap:10px;
+    padding:11px 10px; border-radius:14px; font-size:14.5px; transition:background .12s;
+  }
+  .item-row:hover{ background:#f6fbf8; }
+  .item-row.checked{ opacity:.55; }
+  .item-row.checked .item-name{ text-decoration:line-through; color:var(--ink-soft); }
+  .check{
+    width:22px; height:22px; border:2px solid #cfe3d6; border-radius:8px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; background:#fff; flex-shrink:0; font-size:12px;
+  }
+  .check.on{ background:var(--leaf); border-color:var(--leaf); color:#fff; }
+  .item-name{ font-weight:600; }
+  .item-qty{
+    width:46px; font-family:'IBM Plex Mono',monospace; font-size:12px; border:none;
+    border-radius:8px; padding:6px; text-align:center; background:var(--leaf-light);
+  }
+  .item-price{
+    width:68px; font-family:'IBM Plex Mono',monospace; font-size:12px; border:none;
+    border-radius:8px; padding:6px 8px; background:var(--leaf-light);
+  }
+  .item-price::placeholder{ color:#9db7a4; }
+  .remove-btn{ background:none; border:none; color:#c3d3c8; cursor:pointer; font-size:15px; }
+  .remove-btn:hover{ color:var(--danger); }
+  .empty-state{ text-align:center; padding:50px 10px; color:var(--ink-soft); }
+  .empty-state .big{ font-family:'Manrope',sans-serif; font-weight:800; font-size:17px; margin-bottom:6px; color:var(--ink); }
+
+  /* ---------- Receipt / budget panel ---------- */
+  #receipt{ position:sticky; top:20px; padding:0; overflow:hidden; }
+  #receipt .receipt-inner{ padding:22px; }
+  #receipt h2{ color:#fff; font-size:19px; letter-spacing:-0.3px; margin-bottom:4px; }
+  #receipt .receipt-sub{ font-size:11.5px; font-weight:600; color:rgba(255,255,255,0.55); margin:-4px 0 16px; letter-spacing:.2px; }
+  .promo-band{
+    background:linear-gradient(155deg, #146840 0%, var(--forest) 42%, var(--forest-deep) 100%);
+    padding:26px 24px 24px; color:#fff; position:relative; overflow:hidden;
+  }
+  .promo-band::before{
+    content:""; position:absolute; top:-60px; right:-50px; width:230px; height:230px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%);
+  }
+  .receipt-line{
+    display:flex; align-items:flex-end; gap:8px; font-size:14.5px; font-weight:700;
+    padding:9px 0; color:rgba(255,255,255,0.94); position:relative; z-index:1;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .receipt-line .rline-name{ font-family:'Manrope',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .receipt-line .rline-dots{ flex:1; border-bottom:1.5px dotted rgba(255,255,255,0.32); margin-bottom:5px; min-width:10px; }
+  .receipt-line .rline-price{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13.5px; white-space:nowrap; }
+  .receipt-line.checked{ color:rgba(255,255,255,0.4); font-weight:500; text-decoration:line-through; text-decoration-color:rgba(255,255,255,0.3); }
+  .receipt-line.checked .rline-dots{ border-color:rgba(255,255,255,0.18); }
+  .receipt-line.checked .rline-price{ font-weight:500; }
+  .receipt-total{
+    display:flex; justify-content:space-between; align-items:baseline; font-family:'Manrope',sans-serif;
+    border-top:1px dashed rgba(255,255,255,0.3); margin-top:12px; padding-top:12px; position:relative; z-index:1;
+  }
+  .receipt-total span:first-child{ font-size:12.5px; font-weight:800; letter-spacing:1.2px; color:rgba(255,255,255,0.85); }
+  .receipt-total span:last-child{ font-size:24px; font-weight:800; letter-spacing:-0.5px; }
+  .budget-input-row{ display:flex; gap:6px; margin-top:18px; align-items:center; font-size:12.5px; font-weight:600; color:var(--ink); }
+  .budget-input-row input{
+    width:90px; font-family:'IBM Plex Mono',monospace; padding:8px 10px; border:none; border-radius:10px; background:var(--leaf-light);
+  }
+  .budget-bar-track{ height:9px; background:var(--leaf-light); border-radius:5px; margin:12px 0 6px; overflow:hidden; }
+  .budget-bar-fill{ height:100%; background:linear-gradient(90deg, var(--leaf), var(--forest)); transition:width .3s; }
+  .budget-bar-fill.over{ background:linear-gradient(90deg, var(--danger), #b8402a); }
+  .budget-label{ font-size:11.5px; font-weight:600; color:var(--ink-soft); display:flex; justify-content:space-between; }
+  .finish-btn{
+    width:100%; margin-top:18px; padding:15px; background:var(--amber); color:#fff; border:none;
+    border-radius:16px; font-family:'Manrope',sans-serif; font-weight:800; font-size:13.5px;
+    letter-spacing:.2px; cursor:pointer; box-shadow:0 10px 20px rgba(232,130,60,0.35);
+  }
+  .finish-btn:hover{ filter:brightness(1.05); }
+  .finish-btn:disabled{ background:#dfe6e1; box-shadow:none; cursor:not-allowed; color:#9fb0a5; }
+
+  /* ---------- History ---------- */
+  .trip-card{
+    background:var(--leaf-light); border-radius:16px; padding:14px 16px; margin-bottom:10px;
+  }
+  .trip-card .trip-head{ display:flex; justify-content:space-between; font-family:'Manrope',sans-serif; font-size:13.5px; font-weight:800; margin-bottom:4px; color:var(--forest); }
+  .trip-card .trip-meta{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-bottom:8px; }
+  .trip-card .trip-items{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; line-height:1.5; }
+  .trip-card button{
+    font-size:12px; padding:7px 14px; border:none; background:var(--forest); color:#fff; border-radius:20px; cursor:pointer; font-weight:700;
+  }
+  .trip-card button:hover{ filter:brightness(1.1); }
+  .trip-card button.ghost{ background:transparent; color:var(--danger); box-shadow:inset 0 0 0 1.5px rgba(217,87,59,0.4); }
+  .trip-card button.ghost:hover{ background:rgba(217,87,59,0.08); filter:none; }
+  .trip-card .trip-actions{ display:flex; gap:8px; }
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(10,30,20,0.5); display:none;
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-backdrop.show{ display:flex; }
+  .modal{
+    background:var(--card); border-radius:22px; max-width:480px; width:100%;
+    max-height:82vh; overflow-y:auto; padding:26px; box-shadow:0 25px 60px rgba(0,0,0,0.35);
+  }
+  .modal h3{ font-family:'Manrope',sans-serif; font-weight:800; margin-top:0; font-size:19px; }
+  .modal .close-x{ float:right; background:var(--leaf-light); border:none; width:30px; height:30px; border-radius:50%; font-size:15px; cursor:pointer; color:var(--forest); }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:#cfe3d6; border-radius:4px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <div class="mark"><img src="icon.svg" alt="TidyCart logo"></div>
+      <div>
+        <h1>TidyCart</h1>
+        <div class="sub">household grocery &amp; to-do, sorted fast</div>
+      </div>
+    </div>
+    <div class="status-row">
+      <div class="sync-pill" id="syncPill"><span class="dot" id="syncDot"></span><span id="syncText">Synced</span></div>
+      <button class="icon-btn" id="historyBtn">History</button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <h2>Everything you need,<br><span>sorted automatically.</span></h2>
+    <p>Add items below — TidyCart sorts them by aisle, syncs across every device, and keeps the budget honest.</p>
+  </div>
+
+  <div class="cat-strip" id="catStrip">
+    <div class="cat-chip" onclick="document.getElementById('cat-Produce')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🥬</div><span class="label">Produce</span></div>
+    <div class="cat-chip" onclick="document.getElementById('cat-Dairy_Eggs')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🥛</div><span class="label">Dairy</span></div>
+    <div class="cat-chip" onclick="document.getElementById('cat-Meat_Seafood')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🍗</div><span class="label">Meat</span></div>
+    <div class="cat-chip" onclick="document.getElementById('cat-Bakery')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🍞</div><span class="label">Bakery</span></div>
+    <div class="cat-chip" onclick="document.getElementById('cat-Frozen')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🧊</div><span class="label">Frozen</span></div>
+    <div class="cat-chip" onclick="document.getElementById('cat-Pantry')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🥫</div><span class="label">Pantry</span></div>
+    <div class="cat-chip" onclick="document.getElementById('cat-Beverages')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🥤</div><span class="label">Drinks</span></div>
+    <div class="cat-chip" onclick="document.getElementById('cat-Household')?.scrollIntoView({behavior:'smooth',block:'start'})"><div class="circle">🧻</div><span class="label">Household</span></div>
+  </div>
+
+  <div class="layout">
+
+    <!-- MAIN LIST -->
+    <div class="panel">
+      <h2>The List</h2>
+      <div class="add-row">
+        <input type="text" id="addInput" placeholder="Add an item… e.g. milk, 2 avocados" autocomplete="off">
+        <div class="suggest-box" id="suggestBox" style="display:none;"></div>
+      </div>
+      <div class="chips" id="quickChips"></div>
+      <div id="listBody"></div>
+    </div>
+
+    <!-- RECEIPT -->
+    <div class="panel" id="receipt">
+      <div class="promo-band">
+        <h2>Running Total</h2>
+        <div class="receipt-sub">updates live as you check items off</div>
+        <div id="receiptLines"></div>
+        <div class="receipt-total"><span>TOTAL</span><span id="receiptTotal">₱0.00</span></div>
+      </div>
+      <div class="receipt-inner">
+        <div class="budget-input-row">
+          <span>Monthly budget:</span> ₱<input type="number" id="budgetInput" min="0" step="1">
+        </div>
+        <div class="budget-bar-track"><div class="budget-bar-fill" id="budgetFill" style="width:0%"></div></div>
+        <div class="budget-label"><span id="budgetSpent">₱0 this list</span><span id="budgetLeft"></span></div>
+        <button class="finish-btn" id="finishBtn">FINISH</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal-backdrop" id="historyModal">
+  <div class="modal">
+    <button class="close-x" data-close="historyModal">✕</button>
+    <h3>Past Trips</h3>
+    <button class="icon-btn" id="clearHistoryBtn" style="margin-bottom:10px;">Clear History</button>
+    <div id="clearHistoryConfirm" style="display:none; margin-bottom:14px; padding:14px 16px; background:#fff0ec; border-radius:14px;">
+      <div style="font-size:12.5px; margin-bottom:10px; color:var(--danger); font-weight:600;">Clear all past trips? This can't be undone.</div>
+      <button class="icon-btn" id="clearHistoryYes" style="background:var(--danger); margin-right:6px;">Yes, clear it</button>
+      <button class="icon-btn" id="clearHistoryNo" style="background:#fff; color:var(--ink); box-shadow:none; border:1px solid #e2d6d2;">Cancel</button>
+    </div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+
+<script type="module" src="firebase-storage.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  const CATEGORY_ORDER_DEFAULT = ["Produce","Dairy & Eggs","Meat & Seafood","Bakery","Frozen","Pantry","Beverages","Household","Other"];
+  const CATEGORY_KEYWORDS = {
+    "Produce": ["apple","banana","lettuce","tomato","onion","potato","carrot","spinach","avocado","garlic","cucumber","fruit","vegetable","berry","lemon","lime","orange","grape","broccoli","celery","mushroom","cilantro","basil","kale","pear","peach","mango","corn","squash"],
+    "Dairy & Eggs": ["milk","cheese","yogurt","butter","cream","egg","dairy"],
+    "Meat & Seafood": ["chicken","beef","pork","turkey","fish","shrimp","salmon","bacon","sausage","meat","steak","tuna","tilapia"],
+    "Bakery": ["bread","bagel","muffin","cake","tortilla","bun","roll","croissant","pastry","baguette"],
+    "Frozen": ["frozen","ice cream","popsicle","frozen pizza","fries"],
+    "Beverages": ["juice","soda","water","beer","wine","drink","coffee","tea","kombucha"],
+    "Pantry": ["rice","pasta","beans","flour","sugar","oil","sauce","spice","cereal","oats","canned","soup","snack","chips","nuts","peanut butter","jam","honey","salt","pepper"],
+    "Household": ["paper towel","toilet paper","soap","detergent","shampoo","cleaner","trash bag","tissue","sponge","foil","napkin","batteries"]
+  };
+
+  function categorize(name){
+    const n = name.toLowerCase();
+    for (const cat of CATEGORY_ORDER_DEFAULT){
+      const kws = CATEGORY_KEYWORDS[cat];
+      if (!kws) continue;
+      for (const kw of kws){ if (n.includes(kw)) return cat; }
+    }
+    return "Other";
+  }
+
+  function parseInput(raw){
+    // pulls a leading quantity like "2 avocados" or "avocados x3"
+    let qty = 1, name = raw.trim();
+    let m = name.match(/^(\d+)\s+(.*)$/);
+    if (m){ qty = parseInt(m[1],10); name = m[2]; }
+    else{
+      m = name.match(/^(.*)\s*x\s*(\d+)$/i);
+      if (m){ name = m[1].trim(); qty = parseInt(m[2],10); }
+    }
+    return { name: name.trim(), qty: qty || 1 };
+  }
+
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function money(n){ return "₱" + (Math.round((n||0)*100)/100).toFixed(2); }
+
+  // ---------------- STATE ----------------
+  let state = {
+    items: [],            // {id,name,qty,category,checked,price}
+    aisleOrder: CATEGORY_ORDER_DEFAULT.slice(),
+    frequency: {},         // name(lower) -> {count, category}
+    history: [],           // [{id,date,items:[{name,qty,price}],total}]
+    budget: { monthly: 0 }
+  };
+  let dataHash = "";
+  let online = navigator.onLine;
+  let dirty = false; // local unsynced changes pending
+
+  // ---------------- STORAGE ----------------
+  async function safeGet(key, shared){
+    try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
+    catch(e){ return null; }
+  }
+  async function safeSet(key, value, shared){
+    try{ await window.storage.set(key, JSON.stringify(value), shared); return true; }
+    catch(e){ return false; }
+  }
+
+  async function loadAll(){
+    const [items, aisle, freq, hist, budget] = await Promise.all([
+      safeGet("tally:items", true),
+      safeGet("tally:aisleOrder", true),
+      safeGet("tally:frequency", true),
+      safeGet("tally:history", true),
+      safeGet("tally:budget", true)
+    ]);
+    if (items) state.items = JSON.parse(items);
+    if (aisle) state.aisleOrder = JSON.parse(aisle);
+    if (freq) state.frequency = JSON.parse(freq);
+    if (hist) state.history = JSON.parse(hist);
+    if (budget) state.budget = JSON.parse(budget);
+    dataHash = JSON.stringify(state.items);
+    renderAll();
+  }
+
+  let pendingWrites = 0;      // counts in-flight/queued writes so poll knows to wait
+  let writeSeq = 0;            // increments on every local change so stale writes can be ignored
+  let persistTimer = null;
+
+  function persistItems(){
+    // Called on every tap/edit. Marks state dirty immediately (synchronously) so a poll
+    // that runs in between can't clobber this change, then batches rapid-fire calls
+    // (e.g. fast repeated taps) into a single debounced write of the latest state.
+    if (pendingWrites === 0) pendingWrites = 1;
+    dirty = true;
+    const mySeq = ++writeSeq;
+    if (persistTimer) clearTimeout(persistTimer);
+    persistTimer = setTimeout(async () => {
+      persistTimer = null;
+      const snapshot = JSON.stringify(state.items);
+      const ok = await safeSet("tally:items", state.items, true);
+      // Only clear "dirty" / accept this write if nothing newer has queued while we were writing.
+      if (mySeq === writeSeq){
+        if (ok) dataHash = snapshot;
+        pendingWrites = 0;
+        dirty = false;
+        setSyncStatus(ok ? "synced" : "offline");
+      }
+    }, 250);
+  }
+
+  async function persistItemsNow(){
+    // Immediate (non-debounced) write, used on reconnect/offline-flush.
+    dirty = true;
+    const mySeq = ++writeSeq;
+    if (persistTimer){ clearTimeout(persistTimer); persistTimer = null; }
+    const snapshot = JSON.stringify(state.items);
+    const ok = await safeSet("tally:items", state.items, true);
+    if (mySeq === writeSeq){
+      if (ok) dataHash = snapshot;
+      pendingWrites = 0;
+      dirty = false;
+      setSyncStatus(ok ? "synced" : "offline");
+    }
+  }
+  function persistAisle(){ safeSet("tally:aisleOrder", state.aisleOrder, true); }
+  function persistFrequency(){ safeSet("tally:frequency", state.frequency, true); }
+  function persistHistory(){ safeSet("tally:history", state.history, true); }
+  function persistBudget(){ safeSet("tally:budget", state.budget, true); }
+
+  // ---------------- SYNC / POLLING ----------------
+  function setSyncStatus(mode){
+    const dot = document.getElementById("syncDot");
+    const text = document.getElementById("syncText");
+    dot.className = "dot";
+    if (mode === "offline"){ dot.classList.add("off"); text.textContent = "Offline — will sync"; }
+    else if (mode === "syncing"){ dot.classList.add("sync"); text.textContent = "Syncing…"; }
+    else { text.textContent = "Synced"; }
+  }
+
+  async function pollRemote(){
+    if (dirty) return; // don't clobber an in-flight local write
+    const seqAtStart = writeSeq;
+    setSyncStatus(online ? "syncing" : "offline");
+    const remote = await safeGet("tally:items", true);
+    // A local change (e.g. Finish Shopping Trip, a check-off, a qty edit) may have started
+    // while this fetch was in flight — if so, this response is stale and must not be applied.
+    if (dirty || writeSeq !== seqAtStart){ setSyncStatus(online ? "syncing" : "offline"); return; }
+    if (remote === null){ setSyncStatus(online ? "synced" : "offline"); return; }
+    if (remote !== dataHash){
+      dataHash = remote;
+      state.items = JSON.parse(remote);
+      renderList(); renderReceipt();
+    }
+    setSyncStatus("synced");
+  }
+
+  window.addEventListener("online", () => { online = true; flushOffline(); });
+  window.addEventListener("offline", () => { online = false; setSyncStatus("offline"); });
+
+  async function flushOffline(){
+    setSyncStatus("syncing");
+    await persistItemsNow();
+    await Promise.all([persistAisle(), persistFrequency(), persistHistory(), persistBudget()]);
+    setSyncStatus("synced");
+  }
+
+  setInterval(pollRemote, 1500);
+  window.addEventListener("focus", pollRemote);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) pollRemote(); });
+
+  // ---------------- RENDER ----------------
+  function renderAll(){ renderList(); renderReceipt(); renderQuickChips(); renderBudgetInputs(); }
+
+  function renderList(){
+    const body = document.getElementById("listBody");
+    body.innerHTML = "";
+    if (state.items.length === 0){
+      body.innerHTML = `<div class="empty-state"><div class="big">The list is empty</div>Add your first item above — it'll be sorted into the right aisle automatically.</div>`;
+      return;
+    }
+    state.aisleOrder.forEach(cat => {
+      const items = state.items.filter(i => i.category === cat);
+      if (items.length === 0) return;
+      const group = document.createElement("div");
+      group.className = "category-group";
+      group.id = "cat-" + cat.replace(/\W+/g,'_');
+      group.innerHTML = `<div class="category-title">${cat}<div class="rule"></div></div>`;
+      items.forEach(item => group.appendChild(renderItemRow(item)));
+      body.appendChild(group);
+    });
+  }
+
+  function renderItemRow(item){
+    const row = document.createElement("div");
+    row.className = "item-row" + (item.checked ? " checked" : "");
+
+    const check = document.createElement("div");
+    check.className = "check" + (item.checked ? " on" : "");
+    check.textContent = item.checked ? "✓" : "";
+    check.addEventListener("click", () => toggleCheck(item.id));
+
+    const name = document.createElement("div");
+    name.className = "item-name";
+    name.textContent = item.name + (item.qty > 1 ? "  ×" + item.qty : "");
+
+    const qty = document.createElement("input");
+    qty.type = "number"; qty.min = "1"; qty.className = "item-qty"; qty.value = item.qty;
+    qty.title = "Quantity";
+    qty.addEventListener("input", () => {
+      const val = parseInt(qty.value,10);
+      if (!isNaN(val) && val >= 1){ item.qty = val; persistItems(); renderReceipt(); }
+    });
+    qty.addEventListener("change", () => {
+      item.qty = Math.max(1, parseInt(qty.value,10) || 1);
+      qty.value = item.qty;
+      persistItems(); renderList(); renderReceipt();
+    });
+
+    const price = document.createElement("input");
+    price.type = "number"; price.min = "0"; price.step = "0.01"; price.className = "item-price";
+    price.placeholder = "price"; price.value = item.price != null ? item.price : "";
+    price.title = "Price from receipt";
+    price.addEventListener("change", () => { item.price = price.value === "" ? null : parseFloat(price.value); persistItems(); renderReceipt(); });
+
+    const rm = document.createElement("button");
+    rm.className = "remove-btn"; rm.textContent = "✕"; rm.title = "Remove";
+    rm.addEventListener("click", () => removeItem(item.id));
+
+    row.appendChild(check); row.appendChild(name); row.appendChild(qty); row.appendChild(price); row.appendChild(rm);
+    return row;
+  }
+
+  function renderReceipt(){
+    const lines = document.getElementById("receiptLines");
+    lines.innerHTML = "";
+    let total = 0;
+    const orderedItems = state.aisleOrder.flatMap(cat => state.items.filter(i => i.category === cat));
+    orderedItems.forEach(i => {
+      const lineTotal = (i.price || 0) * (i.qty || 1);
+      if (i.price) total += lineTotal;
+      const line = document.createElement("div");
+      line.className = "receipt-line" + (i.checked ? " checked" : "");
+      line.innerHTML = `<span class="rline-name">${i.name}${i.qty>1 ? " x"+i.qty : ""}</span><span class="rline-dots"></span><span class="rline-price">${i.price ? money(lineTotal) : "—"}</span>`;
+      lines.appendChild(line);
+    });
+    document.getElementById("receiptTotal").textContent = money(total);
+    renderBudgetBar(total);
+    const checked = state.items.filter(i => i.checked);
+    const allPriced = checked.length > 0 && checked.every(i => i.price != null && i.price > 0);
+    const hasBudget = (state.budget.monthly || 0) > 0;
+    document.getElementById("finishBtn").disabled = !(allPriced && hasBudget);
+    document.getElementById("finishBtn").title = !hasBudget ? "Set a monthly budget first" : (!allPriced ? "Enter a price for every checked item first" : "");
+  }
+
+  function renderBudgetInputs(){
+    document.getElementById("budgetInput").value = state.budget.monthly || "";
+  }
+
+  function renderBudgetBar(currentListTotal){
+    const budget = state.budget.monthly || 0;
+    const pct = budget > 0 ? Math.min(100, (currentListTotal / budget) * 100) : 0;
+    const fill = document.getElementById("budgetFill");
+    fill.style.width = pct + "%";
+    fill.classList.toggle("over", budget > 0 && currentListTotal > budget);
+    document.getElementById("budgetSpent").textContent = money(currentListTotal) + " this list";
+    document.getElementById("budgetLeft").textContent = budget > 0 ? (currentListTotal > budget ? money(currentListTotal-budget)+" over budget" : money(budget-currentListTotal)+" left") : "no budget set";
+  }
+
+  function renderQuickChips(){
+    const wrap = document.getElementById("quickChips");
+    wrap.innerHTML = `<div class="chips-label">Suggested</div>`;
+    const inListNames = new Set(state.items.map(i => i.name.toLowerCase()));
+    const top = Object.entries(state.frequency)
+      .filter(([name]) => !inListNames.has(name))
+      .sort((a,b) => b[1].count - a[1].count)
+      .slice(0, 8);
+    if (top.length === 0){ wrap.querySelector(".chips-label").textContent = "Suggested — add a few items and TidyCart will start predicting your next list"; return; }
+    top.forEach(([name, meta]) => {
+      const chip = document.createElement("div");
+      chip.className = "chip"; chip.textContent = "+ " + name;
+      chip.addEventListener("click", () => addItem(name, 1));
+      wrap.appendChild(chip);
+    });
+  }
+
+  // ---------------- ACTIONS ----------------
+  function addItem(rawName, qtyOverride, priceOverride){
+    const parsed = parseInput(rawName);
+    const name = parsed.name;
+    if (!name) return;
+    const qty = qtyOverride || parsed.qty;
+    const lower = name.toLowerCase();
+    const existing = state.items.find(i => i.name.toLowerCase() === lower && !i.checked);
+    if (existing){
+      existing.qty += qty;
+      if (priceOverride != null && existing.price == null) existing.price = priceOverride;
+    }
+    else {
+      const freqEntry = state.frequency[lower];
+      const category = freqEntry ? freqEntry.category : categorize(name);
+      state.items.push({ id: uid(), name, qty, category, checked:false, price: priceOverride != null ? priceOverride : null });
+    }
+    state.frequency[lower] = { count: (state.frequency[lower]?.count || 0) + 1, category: state.frequency[lower]?.category || categorize(name) };
+    persistItems(); persistFrequency();
+    renderList(); renderReceipt(); renderQuickChips();
+  }
+
+  function toggleCheck(id){
+    const item = state.items.find(i => i.id === id);
+    if (!item) return;
+    item.checked = !item.checked;
+    persistItems();
+    renderList(); renderReceipt();
+  }
+
+  function removeItem(id){
+    state.items = state.items.filter(i => i.id !== id);
+    persistItems();
+    renderList(); renderReceipt(); renderQuickChips();
+  }
+
+  let finishing = false;
+  function finishTrip(){
+    if (finishing) return;
+    const checkedItems = state.items.filter(i => i.checked);
+    if (checkedItems.length === 0) return;
+    finishing = true;
+    document.getElementById("finishBtn").disabled = true;
+    const total = checkedItems.reduce((sum,i) => sum + (i.price||0)*(i.qty||1), 0);
+    const trip = {
+      id: uid(),
+      date: new Date().toISOString(),
+      items: checkedItems.map(i => ({ name:i.name, qty:i.qty, price:i.price })),
+      total
+    };
+    state.history.unshift(trip);
+    state.items = state.items.filter(i => !i.checked);
+    persistItems(); persistHistory();
+    renderList(); renderReceipt(); renderQuickChips();
+    finishing = false;
+  }
+
+  function renderHistory(){
+    const wrap = document.getElementById("historyList");
+    wrap.innerHTML = "";
+    document.getElementById("clearHistoryConfirm").style.display = "none";
+    document.getElementById("clearHistoryBtn").disabled = state.history.length === 0;
+    if (state.history.length === 0){
+      wrap.innerHTML = `<p style="font-size:13px;color:var(--ink-soft);">No trips finished yet. Check items off and tap "Finish" to save your first one here.</p>`;
+      return;
+    }
+    state.history.forEach(trip => {
+      const card = document.createElement("div");
+      card.className = "trip-card";
+      const dateStr = new Date(trip.date).toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"});
+      card.innerHTML = `
+        <div class="trip-head"><span>${dateStr}</span><span>${money(trip.total)}</span></div>
+        <div class="trip-meta">${trip.items.length} item${trip.items.length===1?"":"s"}</div>
+        <div class="trip-items">${trip.items.map(i => i.name + (i.qty>1 ? " x"+i.qty : "")).join(", ")}</div>
+      `;
+      const actions = document.createElement("div");
+      actions.className = "trip-actions";
+
+      const btn = document.createElement("button");
+      btn.textContent = "Copy to new list";
+      btn.addEventListener("click", () => {
+        trip.items.forEach(i => addItem(i.name, i.qty, i.price));
+        document.getElementById("historyModal").classList.remove("show");
+      });
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "ghost";
+      delBtn.textContent = "Delete";
+      let confirmingDelete = false, revertTimer = null;
+      delBtn.addEventListener("click", () => {
+        if (!confirmingDelete){
+          confirmingDelete = true;
+          delBtn.textContent = "Confirm?";
+          delBtn.classList.remove("ghost");
+          delBtn.style.background = "var(--danger)";
+          delBtn.style.color = "#fff";
+          revertTimer = setTimeout(() => {
+            confirmingDelete = false;
+            delBtn.textContent = "Delete";
+            delBtn.classList.add("ghost");
+            delBtn.style.background = "";
+            delBtn.style.color = "";
+          }, 3000);
+          return;
+        }
+        clearTimeout(revertTimer);
+        state.history = state.history.filter(t => t.id !== trip.id);
+        persistHistory();
+        renderHistory();
+      });
+
+      actions.appendChild(btn);
+      actions.appendChild(delBtn);
+      card.appendChild(actions);
+      wrap.appendChild(card);
+    });
+  }
+
+  // ---------------- EVENTS ----------------
+  const addInput = document.getElementById("addInput");
+  const suggestBox = document.getElementById("suggestBox");
+
+  addInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){
+      const val = addInput.value.trim();
+      if (val){ addItem(val); addInput.value = ""; suggestBox.style.display = "none"; }
+    }
+  });
+  addInput.addEventListener("input", () => {
+    const val = addInput.value.trim().toLowerCase();
+    if (!val){ suggestBox.style.display = "none"; return; }
+    const matches = Object.keys(state.frequency)
+      .filter(name => name.includes(val))
+      .sort((a,b) => state.frequency[b].count - state.frequency[a].count)
+      .slice(0,6);
+    if (matches.length === 0){ suggestBox.style.display = "none"; return; }
+    suggestBox.innerHTML = "";
+    matches.forEach(name => {
+      const opt = document.createElement("div");
+      opt.className = "opt";
+      opt.innerHTML = `<span>${name}</span><small>${state.frequency[name].category}</small>`;
+      opt.addEventListener("click", () => { addItem(name); addInput.value=""; suggestBox.style.display="none"; addInput.focus(); });
+      suggestBox.appendChild(opt);
+    });
+    suggestBox.style.display = "block";
+  });
+  document.addEventListener("click", (e) => {
+    if (!suggestBox.contains(e.target) && e.target !== addInput) suggestBox.style.display = "none";
+  });
+
+  document.getElementById("finishBtn").addEventListener("click", finishTrip);
+
+  document.getElementById("budgetInput").addEventListener("change", (e) => {
+    state.budget.monthly = parseFloat(e.target.value) || 0;
+    persistBudget(); renderReceipt();
+  });
+
+  document.getElementById("historyBtn").addEventListener("click", () => { renderHistory(); document.getElementById("historyModal").classList.add("show"); });
+  document.getElementById("clearHistoryBtn").addEventListener("click", () => {
+    if (state.history.length === 0) return;
+    document.getElementById("clearHistoryConfirm").style.display = "block";
+  });
+  document.getElementById("clearHistoryNo").addEventListener("click", () => {
+    document.getElementById("clearHistoryConfirm").style.display = "none";
+  });
+  document.getElementById("clearHistoryYes").addEventListener("click", () => {
+    state.history = [];
+    persistHistory();
+    document.getElementById("clearHistoryConfirm").style.display = "none";
+    renderHistory();
+  });
+  document.querySelectorAll("[data-close]").forEach(btn => {
+    btn.addEventListener("click", () => document.getElementById(btn.getAttribute("data-close")).classList.remove("show"));
+  });
+  document.querySelectorAll(".modal-backdrop").forEach(bd => {
+    bd.addEventListener("click", (e) => { if (e.target === bd) bd.classList.remove("show"); });
+  });
+
+  // ---------------- INIT ----------------
+  setSyncStatus(online ? "syncing" : "offline");
+  (async () => {
+    if (!window.storage){
+      // firebase-storage.js loads as an ES module and may not have attached window.storage yet.
+      await new Promise((resolve) => {
+        window.addEventListener("storage-ready", resolve, { once:true });
+        // Fallback in case the event already fired before this listener attached.
+        setTimeout(() => { if (window.storage) resolve(); }, 50);
+      });
+    }
+    await loadAll();
+    setSyncStatus(online ? "synced" : "offline");
+  })();
+
+})();
+</script>
+</body>
+</html>
