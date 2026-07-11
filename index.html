@@ -85,18 +85,19 @@
   .hero h2 span{ color:var(--leaf); }
 
   /* ---------- Category strip ---------- */
-  .cat-strip{ display:flex; justify-content:space-between; gap:6px; overflow-x:auto; padding:4px 2px 22px; scrollbar-width:none; }
-  .cat-strip::-webkit-scrollbar{ display:none; }
+  .cat-strip{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:16px 18px; padding:4px 4px 22px;
+  }
   .cat-chip{
-    display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer;
   }
   .cat-chip .circle{
-    width:72px; height:72px; border-radius:20px; background:var(--card);
-    display:flex; align-items:center; justify-content:center; font-size:32px;
+    width:clamp(52px, 15vw, 72px); height:clamp(52px, 15vw, 72px); border-radius:20px; background:var(--card);
+    display:flex; align-items:center; justify-content:center; font-size:clamp(20px, 6vw, 32px);
     box-shadow:var(--shadow); transition:transform .12s, box-shadow .12s;
   }
   .cat-chip:hover .circle{ transform:translateY(-3px); box-shadow:var(--shadow-lg); }
-  .cat-chip span.label{ font-size:12px; font-weight:700; color:#0b2e1c; text-align:center; }
+  .cat-chip span.label{ font-size:11.5px; font-weight:700; color:#0b2e1c; text-align:center; }
 
   /* ---------- Layout ---------- */
   .layout{ display:grid; grid-template-columns:1fr 320px; gap:18px; align-items:start; }
