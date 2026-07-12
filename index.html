@@ -353,6 +353,10 @@
     width:118px; padding:6px 7px; border:none; border-radius:8px; background:var(--leaf-light);
     font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ink-soft);
   }
+  .p-readonly{
+    padding:6px 7px; border-radius:8px; background:var(--leaf-light);
+    font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ink-soft); white-space:nowrap;
+  }
 
   /* Notification bell */
   .bell-btn{
@@ -501,7 +505,7 @@
       </div>
       <div>
         <span class="field-label">Purchased</span>
-        <input type="date" id="pantryAddPurchased" title="Date purchased">
+        <div class="p-readonly" id="pantryAddPurchasedDisplay" title="Set automatically to today, not editable">Today</div>
       </div>
       <div>
         <span class="field-label">Expires</span>
@@ -1090,19 +1094,16 @@
   });
 
   document.getElementById("pantryBtn").addEventListener("click", () => {
-    document.getElementById("pantryAddPurchased").value = todayStr();
     renderPantryModal();
     document.getElementById("pantryModal").classList.add("show");
   });
   document.getElementById("pantryAddBtn").addEventListener("click", () => {
     const nameInput = document.getElementById("pantryAddName");
     const qtyInput = document.getElementById("pantryAddQty");
-    const purchasedInput = document.getElementById("pantryAddPurchased");
     const expiryInput = document.getElementById("pantryAddExpiry");
     const qty = Math.max(0, parseInt(qtyInput.value,10) || 1);
-    addPantryItem(nameInput.value, qty, purchasedInput.value, expiryInput.value);
+    addPantryItem(nameInput.value, qty, todayStr(), expiryInput.value);
     nameInput.value = ""; qtyInput.value = "1"; expiryInput.value = "";
-    purchasedInput.value = todayStr();
     nameInput.focus();
   });
   document.getElementById("pantryAddName").addEventListener("keydown", (e) => {
@@ -1259,6 +1260,10 @@
   let selectedPantryIds = new Set(); // transient UI selection, not persisted
 
   function todayStr(){ return new Date().toISOString().slice(0,10); }
+  function formatDateShort(dateStr){
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+  }
 
   function daysUntil(dateStr){
     if (!dateStr) return null;
@@ -1437,13 +1442,11 @@
 
     const purchasedLabel = document.createElement("label");
     purchasedLabel.textContent = "Purchased";
-    const purchased = document.createElement("input");
-    purchased.type = "date"; purchased.value = p.purchased || ""; purchased.title = "Date purchased";
-    purchased.addEventListener("change", () => {
-      p.purchased = purchased.value || null;
-      persistPantry(); renderPantryModal();
-    });
-    purchasedLabel.appendChild(purchased);
+    const purchasedDisplay = document.createElement("div");
+    purchasedDisplay.className = "p-readonly";
+    purchasedDisplay.textContent = p.purchased ? formatDateShort(p.purchased) : "—";
+    purchasedDisplay.title = "Date purchased — set automatically, not editable";
+    purchasedLabel.appendChild(purchasedDisplay);
 
     const expiryLabel = document.createElement("label");
     expiryLabel.textContent = "Expires";
