@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f5132">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <title>TidyCart — Shared Grocery List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -26,6 +31,7 @@
     --radius-sm: 12px;
   }
   *{box-sizing:border-box;}
+  html, body{ overscroll-behavior:none; }
   body{
     margin:0;
     background:
@@ -35,7 +41,12 @@
     color:var(--ink);
     font-family:'Inter', sans-serif;
     min-height:100vh;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
   }
+  input, textarea{ -webkit-user-select:text; user-select:text; }
   #app{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:26px 20px 90px; }
 
   /* ---------- Header ---------- */
@@ -53,6 +64,7 @@
     width:42px; height:42px; border-radius:13px; flex-shrink:0;
     overflow:hidden; box-shadow:0 6px 14px rgba(15,81,50,0.25);
   }
+  .brand .mark img{ width:100%; height:100%; display:block; object-fit:cover; }
   .brand h1{
     font-family:'Manrope', sans-serif; font-weight:800;
     font-size:30px; letter-spacing:-0.5px; margin:0; color:var(--ink); line-height:1.1;
@@ -277,7 +289,95 @@
   .suggest-item.added{ background:var(--forest); color:#fff; }
   .suggest-item .plus{ font-size:14px; line-height:1; }
 
+  /* ---------- Pantry ---------- */
+  .badge-dot{
+    position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 4px;
+    border-radius:10px; background:var(--danger); color:#fff; font-size:10.5px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; font-family:'Manrope',sans-serif;
+  }
+  .pantry-add-row{
+    display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; padding:14px; background:var(--leaf-light); border-radius:14px;
+  }
+  .pantry-add-row input[type=text]{ flex:1 1 140px; min-width:0; }
+  .pantry-add-row input[type=text], .pantry-add-row input[type=number], .pantry-add-row input[type=date]{
+    padding:8px 10px; border:none; border-radius:8px; background:#fff; font-family:'Inter',sans-serif; font-size:12.5px;
+  }
+  .pantry-add-row input[type=number]{ width:56px; }
+  .pantry-add-row input[type=date]{ width:126px; }
+  .pantry-add-row .field-label{ font-size:10px; color:var(--ink-soft); font-weight:700; display:block; margin-bottom:2px; }
+  .pantry-add-row button{
+    padding:8px 16px; border:none; border-radius:8px; background:var(--forest); color:#fff;
+    font-family:'Manrope',sans-serif; font-weight:700; font-size:12.5px; cursor:pointer; align-self:flex-end;
+  }
+  .pantry-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .pantry-toolbar .left-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .pantry-toolbar select{
+    padding:7px 10px; border-radius:8px; border:none; background:var(--leaf-light); color:var(--forest);
+    font-family:'Manrope',sans-serif; font-weight:700; font-size:11.5px; cursor:pointer;
+  }
+  .pantry-toolbar .icon-btn{ padding:7px 13px; font-size:11.5px; box-shadow:none; }
+  .pantry-group{ margin-bottom:16px; }
+  .pantry-group-title{
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:12px; color:var(--forest);
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;
+  }
+  .pantry-row{ padding:10px 4px; border-bottom:1px solid var(--leaf-light); }
+  .pantry-row-top{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .pantry-row .p-check{
+    width:19px; height:19px; border:2px solid #cfe3d6; border-radius:6px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; background:#fff; flex-shrink:0; font-size:11px; color:#fff;
+  }
+  .pantry-row .p-check.on{ background:var(--leaf); border-color:var(--leaf); }
+  .pantry-row .p-name-wrap{ flex:1; min-width:0; }
+  .pantry-row .p-name{ font-weight:700; font-size:13.5px; color:var(--ink); }
+  .pantry-row .p-cat{ font-size:10px; color:var(--ink-soft); font-weight:600; }
+  .pantry-row .p-status{ font-size:10.5px; font-weight:700; margin-top:1px; }
+  .pantry-row .p-status.low{ color:var(--amber); }
+  .pantry-row .p-status.out{ color:var(--danger); }
+  .pantry-row .p-status.expiring{ color:var(--amber); }
+  .pantry-row .p-status.expired{ color:var(--danger); }
+  .pantry-row .p-actions{ display:flex; gap:4px; align-items:center; flex-shrink:0; }
+  .pantry-row .p-add-btn{
+    background:var(--leaf-light); border:none; color:var(--forest); border-radius:8px;
+    padding:6px 9px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .pantry-row .p-del-btn{ background:none; border:none; color:#c3d3c8; cursor:pointer; font-size:14px; }
+  .pantry-row .p-del-btn:hover{ color:var(--danger); }
+  .pantry-row-fields{ display:flex; gap:14px; flex-wrap:wrap; padding-left:29px; }
+  .pantry-row-fields label{ font-size:10px; color:var(--ink-soft); font-weight:700; display:flex; flex-direction:column; gap:3px; }
+  .pantry-row input[type=number]{
+    width:48px; padding:6px; border:none; border-radius:8px; background:var(--leaf-light);
+    font-family:'IBM Plex Mono',monospace; font-size:12px; text-align:center;
+  }
+  .pantry-row input[type=date]{
+    width:118px; padding:6px 7px; border:none; border-radius:8px; background:var(--leaf-light);
+    font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ink-soft);
+  }
+
+  /* Notification bell */
+  .bell-btn{
+    position:relative; background:var(--leaf-light); border:none; border-radius:50%;
+    width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer;
+  }
+  .bell-list-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 12px; border-radius:12px; background:var(--leaf-light); margin-bottom:8px;
+  }
+  .bell-list-item .b-name{ font-weight:700; font-size:13px; color:var(--ink); }
+  .bell-list-item .b-qty{ font-size:11px; color:var(--danger); font-weight:700; }
+  .bell-list-item.read{ opacity:.55; }
+  .bell-list-item .b-new-dot{
+    width:7px; height:7px; border-radius:50%; background:var(--danger); flex-shrink:0; margin-right:6px; display:inline-block;
+  }
+
   ::-webkit-scrollbar{ width:8px; }
+
+  .version-tag{
+    position:fixed; bottom:8px; right:12px; z-index:5;
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:rgba(11,46,28,0.4);
+    letter-spacing:.3px; pointer-events:none; user-select:none;
+  }
   ::-webkit-scrollbar-thumb{ background:#cfe3d6; border-radius:4px; }
 </style>
 </head>
@@ -286,13 +386,7 @@
 
   <header>
     <div class="brand">
-      <div class="mark"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
-        <rect width="1024" height="1024" rx="230" fill="#E1F5EE"/>
-        <path d="M330 460 h95 l95 355 h355 l82 -260 h-497" fill="none" stroke="#0F6E56" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="470" cy="900" r="42" fill="none" stroke="#0F6E56" stroke-width="30"/>
-        <circle cx="740" cy="900" r="42" fill="none" stroke="#0F6E56" stroke-width="30"/>
-        <path d="M655 480 l40 40 l80 -80" fill="none" stroke="#0F6E56" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg></div>
+      <div class="mark"><img src="icon.svg" alt="TidyCart logo"></div>
       <div>
         <h1>TidyCart</h1>
         <div class="sub">household grocery &amp; to-do, sorted fast</div>
@@ -300,6 +394,8 @@
     </div>
     <div class="status-row">
       <div class="sync-pill" id="syncPill"><span class="dot" id="syncDot"></span><span id="syncText">Synced</span></div>
+      <button class="bell-btn" id="bellBtn" title="Low stock reminders">🔔<span id="bellBadge" class="badge-dot" style="display:none;">0</span></button>
+      <button class="icon-btn" id="pantryBtn">Pantry</button>
       <button class="icon-btn" id="historyBtn">History</button>
     </div>
   </header>
@@ -388,7 +484,70 @@
   </div>
 </div>
 
+<!-- PANTRY MODAL -->
+<div class="modal-backdrop" id="pantryModal">
+  <div class="modal">
+    <button class="close-x" data-close="pantryModal">✕</button>
+    <h3>Pantry</h3>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-8px; margin-bottom:16px;">What you've got at home — stock levels and expiration dates.</p>
+    <div class="pantry-add-row">
+      <div style="flex:1 1 140px; min-width:0;">
+        <span class="field-label">Item</span>
+        <input type="text" id="pantryAddName" placeholder="Item name" style="width:100%;">
+      </div>
+      <div>
+        <span class="field-label">Qty</span>
+        <input type="number" id="pantryAddQty" min="0" value="1" title="Quantity">
+      </div>
+      <div>
+        <span class="field-label">Purchased</span>
+        <input type="date" id="pantryAddPurchased" title="Date purchased">
+      </div>
+      <div>
+        <span class="field-label">Expires</span>
+        <input type="date" id="pantryAddExpiry" title="Expiration date (optional)">
+      </div>
+      <button id="pantryAddBtn">Add</button>
+    </div>
+    <div class="pantry-toolbar">
+      <div class="left-actions">
+        <button class="icon-btn secondary" id="pantrySelectAllBtn">Select All</button>
+        <button class="icon-btn" id="pantryClearListBtn">Clear List</button>
+        <button class="icon-btn" id="pantryRemoveSelectedBtn" style="display:none; background:var(--danger);">Remove Selected</button>
+      </div>
+      <select id="pantrySortSelect">
+        <option value="category">Sort: Category</option>
+        <option value="name">Sort: Name</option>
+        <option value="qty">Sort: Quantity</option>
+        <option value="purchased">Sort: Date Purchased</option>
+        <option value="expiry">Sort: Expiration Date</option>
+      </select>
+    </div>
+    <div id="pantryClearConfirm" style="display:none; margin-bottom:14px; padding:14px 16px; background:#fff0ec; border-radius:14px;">
+      <div style="font-size:12.5px; margin-bottom:10px; color:var(--danger); font-weight:600;">Clear the entire pantry? This can't be undone.</div>
+      <button class="icon-btn" id="pantryClearYes" style="background:var(--danger); margin-right:6px;">Yes, clear it</button>
+      <button class="icon-btn" id="pantryClearNo" style="background:#fff; color:var(--ink); box-shadow:none; border:1px solid #e2d6d2;">Cancel</button>
+    </div>
+    <div id="pantryList"></div>
+  </div>
+</div>
 
+<!-- LOW STOCK BELL MODAL -->
+<div class="modal-backdrop" id="bellModal">
+  <div class="modal">
+    <button class="close-x" data-close="bellModal">✕</button>
+    <h3>Low Stock Reminders</h3>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-8px; margin-bottom:14px;">Items at 5 or fewer in your pantry.</p>
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+      <button class="icon-btn secondary" id="bellMarkReadBtn">Mark All as Read</button>
+      <button class="icon-btn" id="bellClearBtn">Clear</button>
+    </div>
+    <div id="bellList"></div>
+  </div>
+</div>
+
+
+<script type="module" src="firebase-storage.js"></script>
 <script>
 (function(){
   "use strict";
@@ -472,7 +631,10 @@
     aisleOrder: CATEGORY_ORDER_DEFAULT.slice(),
     frequency: {},         // name(lower) -> {count, category}
     history: [],           // [{id,date,items:[{name,qty,price}],total}]
-    budget: { monthly: 0 }
+    budget: { monthly: 0 },
+    pantry: [],             // [{id,name,category,qty,purchased,expiry(YYYY-MM-DD or null)}]
+    bellRead: {},           // itemId -> qty snapshot when marked read (item stays listed, just not "unread")
+    bellCleared: {}         // itemId -> qty snapshot when cleared (item hidden until qty changes again)
   };
   let dataHash = "";
   let online = navigator.onLine;
@@ -489,18 +651,22 @@
   }
 
   async function loadAll(){
-    const [items, aisle, freq, hist, budget] = await Promise.all([
+    const [items, aisle, freq, hist, budget, pantry, bellState] = await Promise.all([
       safeGet("tally:items", true),
       safeGet("tally:aisleOrder", true),
       safeGet("tally:frequency", true),
       safeGet("tally:history", true),
-      safeGet("tally:budget", true)
+      safeGet("tally:budget", true),
+      safeGet("tally:pantry", true),
+      safeGet("tally:bellState", true)
     ]);
     if (items) state.items = JSON.parse(items);
     if (aisle) state.aisleOrder = JSON.parse(aisle);
     if (freq) state.frequency = JSON.parse(freq);
     if (hist) state.history = JSON.parse(hist);
     if (budget) state.budget = JSON.parse(budget);
+    if (pantry) state.pantry = JSON.parse(pantry);
+    if (bellState){ const bs = JSON.parse(bellState); state.bellRead = bs.read || {}; state.bellCleared = bs.cleared || {}; }
 
     // Self-healing migration: items/frequency entries saved before a categorization fix keep
     // whatever category they were stamped with at the time — fixing the code alone doesn't
@@ -515,9 +681,16 @@
       const correct = categorize(key);
       if (state.frequency[key].category !== correct){ state.frequency[key].category = correct; recategorized = true; }
     }
+    let pantryRecategorized = false;
+    for (const p of state.pantry){
+      const correct = categorize(p.name);
+      if (p.category !== correct){ p.category = correct; pantryRecategorized = true; }
+    }
     if (recategorized){ persistItems(); persistFrequency(); }
+    if (pantryRecategorized){ persistPantry(); }
     dataHash = JSON.stringify(state.items);
     renderAll();
+    updateBellBadge();
   }
 
   let pendingWrites = 0;      // counts in-flight/queued writes so poll knows to wait
@@ -564,6 +737,8 @@
   function persistFrequency(){ safeSet("tally:frequency", state.frequency, true); }
   function persistHistory(){ safeSet("tally:history", state.history, true); }
   function persistBudget(){ safeSet("tally:budget", state.budget, true); }
+  function persistPantry(){ safeSet("tally:pantry", state.pantry, true); }
+  function persistBellState(){ safeSet("tally:bellState", { read: state.bellRead, cleared: state.bellCleared }, true); }
 
   // ---------------- SYNC / POLLING ----------------
   function setSyncStatus(mode){
@@ -780,6 +955,7 @@
       total
     };
     state.history.unshift(trip);
+    upsertPantryFromPurchase(checkedItems);
     state.items = [];
     persistItems(); persistHistory();
     renderList(); renderReceipt(); renderQuickChips();
@@ -913,6 +1089,75 @@
     persistBudget(); renderReceipt();
   });
 
+  document.getElementById("pantryBtn").addEventListener("click", () => {
+    document.getElementById("pantryAddPurchased").value = todayStr();
+    renderPantryModal();
+    document.getElementById("pantryModal").classList.add("show");
+  });
+  document.getElementById("pantryAddBtn").addEventListener("click", () => {
+    const nameInput = document.getElementById("pantryAddName");
+    const qtyInput = document.getElementById("pantryAddQty");
+    const purchasedInput = document.getElementById("pantryAddPurchased");
+    const expiryInput = document.getElementById("pantryAddExpiry");
+    const qty = Math.max(0, parseInt(qtyInput.value,10) || 1);
+    addPantryItem(nameInput.value, qty, purchasedInput.value, expiryInput.value);
+    nameInput.value = ""; qtyInput.value = "1"; expiryInput.value = "";
+    purchasedInput.value = todayStr();
+    nameInput.focus();
+  });
+  document.getElementById("pantryAddName").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("pantryAddBtn").click();
+  });
+  document.getElementById("pantrySortSelect").addEventListener("change", (e) => {
+    pantrySortMode = e.target.value;
+    renderPantryModal();
+  });
+  document.getElementById("pantrySelectAllBtn").addEventListener("click", () => {
+    if (state.pantry.length === 0) return;
+    if (selectedPantryIds.size === state.pantry.length) selectedPantryIds.clear();
+    else state.pantry.forEach(p => selectedPantryIds.add(p.id));
+    renderPantryModal();
+  });
+  document.getElementById("pantryRemoveSelectedBtn").addEventListener("click", () => {
+    if (selectedPantryIds.size === 0) return;
+    state.pantry = state.pantry.filter(p => !selectedPantryIds.has(p.id));
+    selectedPantryIds.clear();
+    persistPantry(); renderPantryModal();
+  });
+  document.getElementById("pantryClearListBtn").addEventListener("click", () => {
+    if (state.pantry.length === 0) return;
+    document.getElementById("pantryClearConfirm").style.display = "block";
+  });
+  document.getElementById("pantryClearNo").addEventListener("click", () => {
+    document.getElementById("pantryClearConfirm").style.display = "none";
+  });
+  document.getElementById("pantryClearYes").addEventListener("click", () => {
+    state.pantry = [];
+    selectedPantryIds.clear();
+    persistPantry();
+    document.getElementById("pantryClearConfirm").style.display = "none";
+    renderPantryModal();
+  });
+  document.getElementById("bellBtn").addEventListener("click", () => {
+    renderBellModal();
+    document.getElementById("bellModal").classList.add("show");
+  });
+  document.getElementById("bellMarkReadBtn").addEventListener("click", () => {
+    const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p));
+    if (lowItems.length === 0) return;
+    lowItems.forEach(p => { state.bellRead[p.id] = p.qty; });
+    persistBellState();
+    renderBellModal();
+    updateBellBadge();
+  });
+  document.getElementById("bellClearBtn").addEventListener("click", () => {
+    const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p));
+    if (lowItems.length === 0) return;
+    lowItems.forEach(p => { state.bellCleared[p.id] = p.qty; state.bellRead[p.id] = p.qty; });
+    persistBellState();
+    renderBellModal();
+    updateBellBadge();
+  });
   document.getElementById("historyBtn").addEventListener("click", () => { renderHistory(); document.getElementById("historyModal").classList.add("show"); });
   document.getElementById("selectAllBtn").addEventListener("click", () => {
     if (state.items.length === 0) return;
@@ -1008,11 +1253,262 @@
   }
   window.openCategoryModal = openCategoryModal;
 
+  // ---------------- PANTRY ----------------
+  const LOW_STOCK_THRESHOLD = 5;
+  let pantrySortMode = "category";
+  let selectedPantryIds = new Set(); // transient UI selection, not persisted
+
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+  function daysUntil(dateStr){
+    if (!dateStr) return null;
+    const today = new Date(todayStr() + "T00:00:00");
+    const target = new Date(dateStr + "T00:00:00");
+    return Math.round((target - today) / 86400000);
+  }
+
+  function pantryStatus(p){
+    // Returns {label, cls} or null. Expiry takes priority since "expired" is more urgent
+    // than "low stock" when both are true at once.
+    const d = daysUntil(p.expiry);
+    if (d !== null){
+      if (d < 0) return { label: "Expired", cls: "expired" };
+      if (d <= 3) return { label: d === 0 ? "Expires today" : `Expires in ${d}d`, cls: "expiring" };
+    }
+    if (p.qty <= 0) return { label: "Out of stock", cls: "out" };
+    if (p.qty <= LOW_STOCK_THRESHOLD) return { label: "Low stock", cls: "low" };
+    return null;
+  }
+
+  function isLowStock(p){ return p.qty <= LOW_STOCK_THRESHOLD; }
+
+  function isBellCleared(p){ return state.bellCleared[p.id] === p.qty; }
+  function isBellRead(p){ return state.bellRead[p.id] === p.qty; }
+
+  function updateBellBadge(){
+    // The bell is specifically about low/out-of-stock reminders (threshold = 5), not expiry.
+    // Only counts items that are unread AND not cleared — a qty change (restock or further
+    // drop) invalidates a prior read/clear snapshot, so it becomes "new" again automatically.
+    const count = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p) && !isBellRead(p)).length;
+    const badge = document.getElementById("bellBadge");
+    badge.textContent = count > 9 ? "9+" : String(count);
+    badge.style.display = count > 0 ? "flex" : "none";
+  }
+
+  // Called when a shopping trip is finished — folds bought items into pantry stock,
+  // adding onto existing stock rather than overwriting it. Purchase date is stamped as today;
+  // no expiration date is assumed (we don't know shelf life) unless one is set afterward.
+  function upsertPantryFromPurchase(checkedItems){
+    checkedItems.forEach(ci => {
+      const lower = ci.name.toLowerCase();
+      const existing = state.pantry.find(p => p.name.toLowerCase() === lower);
+      if (existing){ existing.qty = (existing.qty || 0) + (ci.qty || 1); existing.purchased = todayStr(); }
+      else {
+        state.pantry.push({ id: uid(), name: ci.name, category: categorize(ci.name), qty: ci.qty || 1, purchased: todayStr(), expiry: null });
+      }
+    });
+    persistPantry();
+  }
+
+  function addPantryItem(name, qty, purchased, expiry){
+    if (!name.trim()) return;
+    const lower = name.trim().toLowerCase();
+    const existing = state.pantry.find(p => p.name.toLowerCase() === lower);
+    if (existing){
+      existing.qty = (existing.qty || 0) + qty;
+      existing.purchased = purchased || todayStr();
+      if (expiry) existing.expiry = expiry;
+    } else {
+      state.pantry.push({ id: uid(), name: name.trim(), category: categorize(name), qty, purchased: purchased || todayStr(), expiry: expiry || null });
+    }
+    persistPantry();
+    renderPantryModal();
+    updateBellBadge();
+  }
+
+  function sortedPantryItems(){
+    const items = state.pantry.slice();
+    switch(pantrySortMode){
+      case "name": return items.sort((a,b) => a.name.localeCompare(b.name));
+      case "qty": return items.sort((a,b) => a.qty - b.qty);
+      case "purchased": return items.sort((a,b) => (b.purchased || "").localeCompare(a.purchased || ""));
+      case "expiry": return items.sort((a,b) => {
+        if (!a.expiry && !b.expiry) return 0;
+        if (!a.expiry) return 1;
+        if (!b.expiry) return -1;
+        return a.expiry.localeCompare(b.expiry);
+      });
+      default: return items;
+    }
+  }
+
+  function renderPantryModal(){
+    const wrap = document.getElementById("pantryList");
+    wrap.innerHTML = "";
+    document.getElementById("pantrySelectAllBtn").disabled = state.pantry.length === 0;
+    document.getElementById("pantryClearListBtn").disabled = state.pantry.length === 0;
+    if (state.pantry.length === 0){
+      document.getElementById("pantryClearConfirm").style.display = "none";
+      selectedPantryIds.clear();
+      wrap.innerHTML = `<div class="empty-state" style="padding:30px 10px;"><div class="big">Pantry is empty</div>Add what you've got at home, or it'll fill in automatically next time you finish a shopping trip.</div>`;
+      updateBellBadge();
+      updateRemoveSelectedVisibility();
+      return;
+    }
+    // Prune selection of any ids no longer present (e.g. after a delete)
+    const validIds = new Set(state.pantry.map(p => p.id));
+    selectedPantryIds.forEach(id => { if (!validIds.has(id)) selectedPantryIds.delete(id); });
+
+    document.getElementById("pantrySelectAllBtn").textContent =
+      (state.pantry.length > 0 && selectedPantryIds.size === state.pantry.length) ? "Deselect All" : "Select All";
+
+    if (pantrySortMode === "category"){
+      state.aisleOrder.forEach(cat => {
+        const items = state.pantry.filter(p => p.category === cat);
+        if (items.length === 0) return;
+        const group = document.createElement("div");
+        group.className = "pantry-group";
+        group.innerHTML = `<div class="pantry-group-title">${cat}</div>`;
+        items.forEach(p => group.appendChild(renderPantryRow(p, false)));
+        wrap.appendChild(group);
+      });
+    } else {
+      sortedPantryItems().forEach(p => wrap.appendChild(renderPantryRow(p, true)));
+    }
+    updateBellBadge();
+    updateRemoveSelectedVisibility();
+  }
+
+  function updateRemoveSelectedVisibility(){
+    document.getElementById("pantryRemoveSelectedBtn").style.display = selectedPantryIds.size > 0 ? "inline-block" : "none";
+  }
+
+  function renderPantryRow(p, showCategoryTag){
+    const row = document.createElement("div");
+    row.className = "pantry-row";
+
+    const top = document.createElement("div");
+    top.className = "pantry-row-top";
+
+    const check = document.createElement("div");
+    check.className = "p-check" + (selectedPantryIds.has(p.id) ? " on" : "");
+    check.textContent = selectedPantryIds.has(p.id) ? "✓" : "";
+    check.addEventListener("click", () => {
+      if (selectedPantryIds.has(p.id)) selectedPantryIds.delete(p.id); else selectedPantryIds.add(p.id);
+      renderPantryModal();
+    });
+
+    const nameWrap = document.createElement("div");
+    nameWrap.className = "p-name-wrap";
+    const status = pantryStatus(p);
+    nameWrap.innerHTML = `<div class="p-name">${p.name}</div>`
+      + (showCategoryTag ? `<div class="p-cat">${p.category}</div>` : "")
+      + (status ? `<div class="p-status ${status.cls}">${status.label}</div>` : "");
+
+    const actions = document.createElement("div");
+    actions.className = "p-actions";
+    const addBtn = document.createElement("button");
+    addBtn.className = "p-add-btn"; addBtn.textContent = "+ List";
+    addBtn.title = "Add to shopping list";
+    addBtn.addEventListener("click", () => { addItem(p.name, 1); addBtn.textContent = "Added"; setTimeout(() => addBtn.textContent = "+ List", 900); });
+    const delBtn = document.createElement("button");
+    delBtn.className = "p-del-btn"; delBtn.textContent = "✕"; delBtn.title = "Remove from pantry";
+    delBtn.addEventListener("click", () => {
+      state.pantry = state.pantry.filter(x => x.id !== p.id);
+      selectedPantryIds.delete(p.id);
+      persistPantry(); renderPantryModal();
+    });
+    actions.appendChild(addBtn); actions.appendChild(delBtn);
+
+    top.appendChild(check); top.appendChild(nameWrap); top.appendChild(actions);
+
+    const fields = document.createElement("div");
+    fields.className = "pantry-row-fields";
+
+    const qtyLabel = document.createElement("label");
+    qtyLabel.textContent = "Qty";
+    const qty = document.createElement("input");
+    qty.type = "number"; qty.min = "0"; qty.value = p.qty; qty.title = "Quantity on hand";
+    qty.addEventListener("change", () => {
+      p.qty = Math.max(0, parseInt(qty.value,10) || 0);
+      persistPantry(); renderPantryModal();
+    });
+    qtyLabel.appendChild(qty);
+
+    const purchasedLabel = document.createElement("label");
+    purchasedLabel.textContent = "Purchased";
+    const purchased = document.createElement("input");
+    purchased.type = "date"; purchased.value = p.purchased || ""; purchased.title = "Date purchased";
+    purchased.addEventListener("change", () => {
+      p.purchased = purchased.value || null;
+      persistPantry(); renderPantryModal();
+    });
+    purchasedLabel.appendChild(purchased);
+
+    const expiryLabel = document.createElement("label");
+    expiryLabel.textContent = "Expires";
+    const expiry = document.createElement("input");
+    expiry.type = "date"; expiry.value = p.expiry || ""; expiry.title = "Expiration date";
+    expiry.addEventListener("change", () => {
+      p.expiry = expiry.value || null;
+      persistPantry(); renderPantryModal();
+    });
+    expiryLabel.appendChild(expiry);
+
+    fields.appendChild(qtyLabel); fields.appendChild(purchasedLabel); fields.appendChild(expiryLabel);
+
+    row.appendChild(top); row.appendChild(fields);
+    return row;
+  }
+
+  function renderBellModal(){
+    const wrap = document.getElementById("bellList");
+    wrap.innerHTML = "";
+    // Prune ack entries for items no longer in pantry, keeps storage tidy long-term.
+    const validIds = new Set(state.pantry.map(p => p.id));
+    let pruned = false;
+    [state.bellRead, state.bellCleared].forEach(map => {
+      Object.keys(map).forEach(id => { if (!validIds.has(id)){ delete map[id]; pruned = true; } });
+    });
+    if (pruned) persistBellState();
+
+    const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p)).sort((a,b) => a.qty - b.qty);
+    document.getElementById("bellMarkReadBtn").disabled = lowItems.length === 0;
+    document.getElementById("bellClearBtn").disabled = lowItems.length === 0;
+    if (lowItems.length === 0){
+      wrap.innerHTML = `<div class="empty-state" style="padding:24px 10px;"><div class="big">All clear</div>Nothing in your pantry is running low right now.</div>`;
+      return;
+    }
+    lowItems.forEach(p => {
+      const unread = !isBellRead(p);
+      const item = document.createElement("div");
+      item.className = "bell-list-item" + (unread ? "" : " read");
+      item.innerHTML = `<div style="display:flex; align-items:center;">${unread ? `<span class="b-new-dot"></span>` : ""}<div><div class="b-name">${p.name}</div><div class="b-qty">${p.qty <= 0 ? "Out of stock" : p.qty + " left"}</div></div></div>`;
+      const addBtn = document.createElement("button");
+      addBtn.className = "p-add-btn"; addBtn.textContent = "+ List";
+      addBtn.addEventListener("click", () => { addItem(p.name, 1); addBtn.textContent = "Added"; setTimeout(() => addBtn.textContent = "+ List", 900); });
+      item.appendChild(addBtn);
+      wrap.appendChild(item);
+    });
+  }
+
   // ---------------- INIT ----------------
   setSyncStatus(online ? "syncing" : "offline");
-  loadAll().then(() => setSyncStatus(online ? "synced" : "offline"));
+  (async () => {
+    if (!window.storage){
+      // firebase-storage.js loads as an ES module and may not have attached window.storage yet.
+      await new Promise((resolve) => {
+        window.addEventListener("storage-ready", resolve, { once:true });
+        // Fallback in case the event already fired before this listener attached.
+        setTimeout(() => { if (window.storage) resolve(); }, 50);
+      });
+    }
+    await loadAll();
+    setSyncStatus(online ? "synced" : "offline");
+  })();
 
 })();
 </script>
+<div class="version-tag">TidyCart __APP_VERSION__</div>
 </body>
 </html>
