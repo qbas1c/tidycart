@@ -1,0 +1,50 @@
+name: Deploy TidyCart to GitHub Pages
+
+# Runs on every push to main — this is what makes the version number auto-increment
+# on every deployment, instead of needing to be bumped by hand.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # lets you manually trigger a redeploy from the Actions tab if needed
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Prevents two deployments from racing each other if you push twice quickly.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Stamp version number
+        run: |
+          # MAJOR.MINOR is set here manually when you want to mark a bigger milestone
+          # (e.g. bump to v1.1 after a big batch of features). The last number
+          # (github.run_number) increments automatically on every single deployment —
+          # that's the part that satisfies "auto-increment on every deploy".
+          VERSION="v1.0.${{ github.run_number }}"
+          echo "Deploying $VERSION"
+          sed -i "s/__APP_VERSION__/$VERSION/" index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
