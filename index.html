@@ -889,7 +889,17 @@
   setInterval(pollRemote, 1500);
   setInterval(pollOthers, 3000);
   window.addEventListener("focus", () => { pollRemote(); pollOthers(); });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden){ pollRemote(); pollOthers(); } });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden){ pollRemote(); pollOthers(); }
+    else {
+      // The page is being backgrounded/closed — this is the last reliable moment we get.
+      // If a debounced write is still waiting on its 250ms timer, force it out now instead
+      // of risking it never firing at all (closing a tab or locking the phone can kill
+      // pending timers before they run).
+      if (persistTimer) persistItemsNow();
+    }
+  });
+  window.addEventListener("pagehide", () => { if (persistTimer) persistItemsNow(); });
 
   // ---------------- RENDER ----------------
   function renderAll(){ renderList(); renderReceipt(); renderQuickChips(); renderBudgetInputs(); }
