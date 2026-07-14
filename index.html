@@ -363,9 +363,15 @@
     background:var(--danger); color:#fff; font-size:9.5px; font-weight:800; line-height:16px; vertical-align:middle;
   }
   .bell-list-item{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    display:flex; align-items:center; gap:10px;
     padding:10px 12px; border-radius:12px; background:var(--leaf-light); margin-bottom:8px;
   }
+  .bell-list-item .b-check{
+    width:19px; height:19px; border:2px solid #b9d4c1; border-radius:6px; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; background:#fff; font-size:11px; color:#fff;
+  }
+  .bell-list-item .b-check.on{ background:var(--leaf); border-color:var(--leaf); }
+  .bell-list-item .b-content{ display:flex; align-items:center; flex:1; min-width:0; }
   .bell-list-item .b-name{ font-weight:700; font-size:13px; color:var(--ink); }
   .bell-list-item .b-qty{ font-size:11px; color:var(--danger); font-weight:700; }
   .bell-list-item .b-qty.warn{ color:var(--amber); }
@@ -555,7 +561,6 @@
       <button class="bell-tab active" id="bellTabStock" data-tab="stock">Low Stock</button>
       <button class="bell-tab" id="bellTabExpiry" data-tab="expiry">Near Expiration</button>
     </div>
-    <p id="bellTabDesc" style="font-size:12.5px; color:var(--ink-soft); margin:0 0 14px;">Items at 5 or fewer in your pantry.</p>
     <div style="display:flex; gap:8px; margin-bottom:16px;">
       <button class="icon-btn secondary" id="bellMarkReadBtn">Mark All as Read</button>
       <button class="icon-btn" id="bellClearBtn">Clear</button>
@@ -1604,16 +1609,40 @@
 
   let bellActiveTab = "stock";
 
-  function renderBellRow(wrap, p, unread, statusText, statusCls){
+  function renderBellRow(wrap, p, unread, statusText, statusCls, toggleReadFn){
     const item = document.createElement("div");
     item.className = "bell-list-item" + (unread ? "" : " read");
     const qtyClass = statusCls === "expired" || statusCls === "out" ? "" : "warn";
-    item.innerHTML = `<div style="display:flex; align-items:center;">${unread ? `<span class="b-new-dot"></span>` : ""}<div><div class="b-name">${esc(p.name)}</div><div class="b-qty ${qtyClass}">${statusText}</div></div></div>`;
+
+    const check = document.createElement("div");
+    check.className = "b-check" + (unread ? "" : " on");
+    check.textContent = unread ? "" : "✓";
+    check.title = unread ? "Mark as read" : "Mark as unread";
+    check.addEventListener("click", () => toggleReadFn(p));
+
+    const content = document.createElement("div");
+    content.className = "b-content";
+    content.innerHTML = `${unread ? `<span class="b-new-dot"></span>` : ""}<div><div class="b-name">${esc(p.name)}</div><div class="b-qty ${qtyClass}">${statusText}</div></div>`;
+
     const addBtn = document.createElement("button");
     addBtn.className = "p-add-btn"; addBtn.textContent = "+ List";
     addBtn.addEventListener("click", () => { addItem(p.name, 1); addBtn.textContent = "Added"; setTimeout(() => addBtn.textContent = "+ List", 900); });
+
+    item.appendChild(check);
+    item.appendChild(content);
     item.appendChild(addBtn);
     wrap.appendChild(item);
+  }
+
+  function toggleStockRead(p){
+    if (isBellRead(p)) delete state.bellRead[p.id];
+    else state.bellRead[p.id] = p.qty;
+    persistBellState(); renderBellModal(); updateBellBadge();
+  }
+  function toggleExpiryRead(p){
+    if (isBellExpiryRead(p)) delete state.bellExpiryRead[p.id];
+    else state.bellExpiryRead[p.id] = expiryBucket(p);
+    persistBellState(); renderBellModal(); updateBellBadge();
   }
 
   function renderBellModal(){
@@ -1636,7 +1665,6 @@
     document.getElementById("bellTabExpiry").innerHTML = `Near Expiration${expiryUnread > 0 ? `<span class="tab-count">${expiryUnread}</span>` : ""}`;
 
     if (bellActiveTab === "stock"){
-      document.getElementById("bellTabDesc").textContent = "Items at 5 or fewer in your pantry.";
       const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p)).sort((a,b) => a.qty - b.qty);
       document.getElementById("bellMarkReadBtn").disabled = lowItems.length === 0;
       document.getElementById("bellClearBtn").disabled = lowItems.length === 0;
@@ -1646,10 +1674,9 @@
       }
       lowItems.forEach(p => {
         const statusText = p.qty <= 0 ? "Out of stock" : p.qty + " left";
-        renderBellRow(wrap, p, !isBellRead(p), statusText, p.qty <= 0 ? "out" : "low");
+        renderBellRow(wrap, p, !isBellRead(p), statusText, p.qty <= 0 ? "out" : "low", toggleStockRead);
       });
     } else {
-      document.getElementById("bellTabDesc").textContent = "Items expiring within 10 days (reminders at 10, 7, 5, 3, and 1 day out).";
       const nearItems = state.pantry.filter(p => isNearExpiry(p) && !isBellExpiryCleared(p))
         .sort((a,b) => daysUntil(a.expiry) - daysUntil(b.expiry));
       document.getElementById("bellMarkReadBtn").disabled = nearItems.length === 0;
@@ -1661,7 +1688,7 @@
       nearItems.forEach(p => {
         const d = daysUntil(p.expiry);
         const statusText = d < 0 ? "Expired" : d === 0 ? "Expires today" : `Expires in ${d}d`;
-        renderBellRow(wrap, p, !isBellExpiryRead(p), statusText, d < 0 ? "expired" : "expiring");
+        renderBellRow(wrap, p, !isBellExpiryRead(p), statusText, d < 0 ? "expired" : "expiring", toggleExpiryRead);
       });
     }
   }
