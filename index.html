@@ -499,6 +499,19 @@
   </div>
 </div>
 
+<!-- FINISH CONFIRMATION MODAL -->
+<div class="modal-backdrop" id="finishConfirmModal">
+  <div class="modal">
+    <button class="close-x" data-close="finishConfirmModal">✕</button>
+    <h3>Finish shopping trip?</h3>
+    <p id="finishConfirmSummary" style="font-size:13px; color:var(--ink-soft); margin-top:-8px; margin-bottom:18px; line-height:1.5;"></p>
+    <div style="display:flex; gap:8px;">
+      <button class="icon-btn" id="finishConfirmYes" style="background:var(--forest);">Yes</button>
+      <button class="icon-btn" id="finishConfirmNo" style="background:#fff; color:var(--ink); box-shadow:none; border:1px solid #e2d6d2;">Keep shopping</button>
+    </div>
+  </div>
+</div>
+
 <!-- PANTRY MODAL -->
 <div class="modal-backdrop" id="pantryModal">
   <div class="modal">
@@ -1184,7 +1197,23 @@
     if (!suggestBox.contains(e.target) && e.target !== addInput) suggestBox.style.display = "none";
   });
 
-  document.getElementById("finishBtn").addEventListener("click", finishTrip);
+  document.getElementById("finishBtn").addEventListener("click", () => {
+    const checkedItems = state.items.filter(i => i.checked);
+    if (checkedItems.length === 0) return;
+    const total = checkedItems.reduce((sum,i) => sum + (i.price||0)*(i.qty||1), 0);
+    const remaining = state.items.length - checkedItems.length;
+    document.getElementById("finishConfirmSummary").textContent =
+      `${checkedItems.length} item${checkedItems.length===1?"":"s"} (${money(total)}) will be saved to History and added to Pantry stock. `
+      + (remaining > 0 ? `The ${remaining} unchecked item${remaining===1?"":"s"} will be cleared from the list too.` : "Your list will be cleared.");
+    document.getElementById("finishConfirmModal").classList.add("show");
+  });
+  document.getElementById("finishConfirmNo").addEventListener("click", () => {
+    document.getElementById("finishConfirmModal").classList.remove("show");
+  });
+  document.getElementById("finishConfirmYes").addEventListener("click", () => {
+    document.getElementById("finishConfirmModal").classList.remove("show");
+    finishTrip();
+  });
 
   document.getElementById("budgetInput").addEventListener("change", (e) => {
     state.budget.monthly = Math.max(0, parseFloat(e.target.value) || 0);
