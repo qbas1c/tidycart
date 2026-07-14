@@ -2,12 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f5132">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TidyCart — Shared Grocery List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -31,7 +26,6 @@
     --radius-sm: 12px;
   }
   *{box-sizing:border-box;}
-  html, body{ overscroll-behavior:none; }
   body{
     margin:0;
     background:
@@ -41,12 +35,7 @@
     color:var(--ink);
     font-family:'Inter', sans-serif;
     min-height:100vh;
-    -webkit-user-select:none; user-select:none;
-    -webkit-touch-callout:none;
-    padding-top:env(safe-area-inset-top);
-    padding-bottom:env(safe-area-inset-bottom);
   }
-  input, textarea{ -webkit-user-select:text; user-select:text; }
   #app{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:26px 20px 90px; }
 
   /* ---------- Header ---------- */
@@ -64,7 +53,6 @@
     width:42px; height:42px; border-radius:13px; flex-shrink:0;
     overflow:hidden; box-shadow:0 6px 14px rgba(15,81,50,0.25);
   }
-  .brand .mark img{ width:100%; height:100%; display:block; object-fit:cover; }
   .brand h1{
     font-family:'Manrope', sans-serif; font-weight:800;
     font-size:30px; letter-spacing:-0.5px; margin:0; color:var(--ink); line-height:1.1;
@@ -364,12 +352,23 @@
     width:38px; height:38px; display:flex; align-items:center; justify-content:center;
     font-size:16px; cursor:pointer;
   }
+  .bell-tabs{ display:flex; gap:6px; margin:6px 0 10px; background:var(--leaf-light); border-radius:12px; padding:4px; }
+  .bell-tab{
+    flex:1; padding:8px 10px; border:none; border-radius:9px; background:transparent; color:var(--forest);
+    font-family:'Manrope',sans-serif; font-weight:700; font-size:12px; cursor:pointer; position:relative;
+  }
+  .bell-tab.active{ background:#fff; box-shadow:var(--shadow); }
+  .bell-tab .tab-count{
+    display:inline-block; min-width:16px; height:16px; padding:0 4px; margin-left:5px; border-radius:8px;
+    background:var(--danger); color:#fff; font-size:9.5px; font-weight:800; line-height:16px; vertical-align:middle;
+  }
   .bell-list-item{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:10px 12px; border-radius:12px; background:var(--leaf-light); margin-bottom:8px;
   }
   .bell-list-item .b-name{ font-weight:700; font-size:13px; color:var(--ink); }
   .bell-list-item .b-qty{ font-size:11px; color:var(--danger); font-weight:700; }
+  .bell-list-item .b-qty.warn{ color:var(--amber); }
   .bell-list-item.read{ opacity:.55; }
   .bell-list-item .b-new-dot{
     width:7px; height:7px; border-radius:50%; background:var(--danger); flex-shrink:0; margin-right:6px; display:inline-block;
@@ -390,7 +389,13 @@
 
   <header>
     <div class="brand">
-      <div class="mark"><img src="icon.svg" alt="TidyCart logo"></div>
+      <div class="mark"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+        <rect width="1024" height="1024" rx="230" fill="#E1F5EE"/>
+        <path d="M330 460 h95 l95 355 h355 l82 -260 h-497" fill="none" stroke="#0F6E56" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="470" cy="900" r="42" fill="none" stroke="#0F6E56" stroke-width="30"/>
+        <circle cx="740" cy="900" r="42" fill="none" stroke="#0F6E56" stroke-width="30"/>
+        <path d="M655 480 l40 40 l80 -80" fill="none" stroke="#0F6E56" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></div>
       <div>
         <h1>TidyCart</h1>
         <div class="sub">household grocery &amp; to-do, sorted fast</div>
@@ -532,16 +537,25 @@
       <button class="icon-btn" id="pantryClearYes" style="background:var(--danger); margin-right:6px;">Yes, clear it</button>
       <button class="icon-btn" id="pantryClearNo" style="background:#fff; color:var(--ink); box-shadow:none; border:1px solid #e2d6d2;">Cancel</button>
     </div>
+    <div id="pantryRemoveConfirm" style="display:none; margin-bottom:14px; padding:14px 16px; background:#fff0ec; border-radius:14px;">
+      <div id="pantryRemoveConfirmText" style="font-size:12.5px; margin-bottom:10px; color:var(--danger); font-weight:600;">Remove selected items? This can't be undone.</div>
+      <button class="icon-btn" id="pantryRemoveYes" style="background:var(--danger); margin-right:6px;">Yes, remove them</button>
+      <button class="icon-btn" id="pantryRemoveNo" style="background:#fff; color:var(--ink); box-shadow:none; border:1px solid #e2d6d2;">Cancel</button>
+    </div>
     <div id="pantryList"></div>
   </div>
 </div>
 
-<!-- LOW STOCK BELL MODAL -->
+<!-- NOTIFICATIONS BELL MODAL -->
 <div class="modal-backdrop" id="bellModal">
   <div class="modal">
     <button class="close-x" data-close="bellModal">✕</button>
-    <h3>Low Stock Reminders</h3>
-    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-8px; margin-bottom:14px;">Items at 5 or fewer in your pantry.</p>
+    <h3>Notifications</h3>
+    <div class="bell-tabs">
+      <button class="bell-tab active" id="bellTabStock" data-tab="stock">Low Stock</button>
+      <button class="bell-tab" id="bellTabExpiry" data-tab="expiry">Near Expiration</button>
+    </div>
+    <p id="bellTabDesc" style="font-size:12.5px; color:var(--ink-soft); margin:0 0 14px;">Items at 5 or fewer in your pantry.</p>
     <div style="display:flex; gap:8px; margin-bottom:16px;">
       <button class="icon-btn secondary" id="bellMarkReadBtn">Mark All as Read</button>
       <button class="icon-btn" id="bellClearBtn">Clear</button>
@@ -551,7 +565,6 @@
 </div>
 
 
-<script type="module" src="firebase-storage.js"></script>
 <script>
 (function(){
   "use strict";
@@ -620,13 +633,24 @@
     let m = name.match(/^(\d+)\s+(.*)$/);
     if (m){ qty = parseInt(m[1],10); name = m[2]; }
     else{
-      m = name.match(/^(.*)\s*x\s*(\d+)$/i);
+      // Requires an actual space before the "x" so it only catches intentional shorthand
+      // ("Sprite x2") and doesn't misfire on product names that happen to end in "x" right
+      // before a number, like "Kleenex100" or "Relax200".
+      m = name.match(/^(.+)\s+x\s*(\d+)$/i);
       if (m){ name = m[1].trim(); qty = parseInt(m[2],10); }
     }
     return { name: name.trim(), qty: qty || 1 };
   }
 
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function esc(s){
+    // Escapes user-entered text before it's interpolated into innerHTML template strings.
+    // Without this, an item name like "<img src=x onerror=...>" would execute as real HTML/JS
+    // on every device viewing the shared list, since names are stored and re-rendered live.
+    const div = document.createElement("div");
+    div.textContent = String(s == null ? "" : s);
+    return div.innerHTML;
+  }
   function money(n){ return "₱" + (Math.round((n||0)*100)/100).toFixed(2); }
 
   // ---------------- STATE ----------------
@@ -638,7 +662,9 @@
     budget: { monthly: 0 },
     pantry: [],             // [{id,name,category,qty,purchased,expiry(YYYY-MM-DD or null)}]
     bellRead: {},           // itemId -> qty snapshot when marked read (item stays listed, just not "unread")
-    bellCleared: {}         // itemId -> qty snapshot when cleared (item hidden until qty changes again)
+    bellCleared: {},        // itemId -> qty snapshot when cleared (item hidden until qty changes again)
+    bellExpiryRead: {},     // itemId -> expiry-milestone bucket snapshot when marked read
+    bellExpiryCleared: {}   // itemId -> expiry-milestone bucket snapshot when cleared
   };
   let dataHash = "";
   let online = navigator.onLine;
@@ -670,7 +696,15 @@
     if (hist) state.history = JSON.parse(hist);
     if (budget) state.budget = JSON.parse(budget);
     if (pantry) state.pantry = JSON.parse(pantry);
-    if (bellState){ const bs = JSON.parse(bellState); state.bellRead = bs.read || {}; state.bellCleared = bs.cleared || {}; }
+    if (bellState){
+      const bs = JSON.parse(bellState);
+      state.bellRead = bs.read || {}; state.bellCleared = bs.cleared || {};
+      state.bellExpiryRead = bs.expiryRead || {}; state.bellExpiryCleared = bs.expiryCleared || {};
+    }
+    if (hist) otherDomains.history.hash = hist;
+    if (budget) otherDomains.budget.hash = budget;
+    if (pantry) otherDomains.pantry.hash = pantry;
+    if (bellState) otherDomains.bell.hash = bellState;
 
     // Self-healing migration: items/frequency entries saved before a categorization fix keep
     // whatever category they were stamped with at the time — fixing the code alone doesn't
@@ -739,10 +773,39 @@
   }
   function persistAisle(){ safeSet("tally:aisleOrder", state.aisleOrder, true); }
   function persistFrequency(){ safeSet("tally:frequency", state.frequency, true); }
-  function persistHistory(){ safeSet("tally:history", state.history, true); }
-  function persistBudget(){ safeSet("tally:budget", state.budget, true); }
-  function persistPantry(){ safeSet("tally:pantry", state.pantry, true); }
-  function persistBellState(){ safeSet("tally:bellState", { read: state.bellRead, cleared: state.bellCleared }, true); }
+
+  // Pantry/History/Budget/Bell state don't need the full debounce+sequence machinery items use
+  // (they're edited far less rapidly), but they DO need: (a) periodic polling so changes on
+  // other devices actually show up without a manual refresh, and (b) to be retried on
+  // reconnect if a write happened while offline. This tracks a last-known hash + a "recently
+  // wrote locally" cooldown per domain, used by both persistOther() and pollOthers() below.
+  const otherDomains = {
+    pantry:   { key: "tally:pantry",    hash: "", lastWrite: 0, get: () => state.pantry,
+                set: (v) => { state.pantry = v; }, onApplied: () => { if (isModalOpen("pantryModal")) renderPantryModal(); updateBellBadge(); } },
+    history:  { key: "tally:history",   hash: "", lastWrite: 0, get: () => state.history,
+                set: (v) => { state.history = v; }, onApplied: () => { if (isModalOpen("historyModal")) renderHistory(); } },
+    budget:   { key: "tally:budget",    hash: "", lastWrite: 0, get: () => state.budget,
+                set: (v) => { state.budget = v; }, onApplied: () => { renderBudgetInputs(); renderReceipt(); } },
+    bell:     { key: "tally:bellState", hash: "", lastWrite: 0,
+                get: () => ({ read: state.bellRead, cleared: state.bellCleared, expiryRead: state.bellExpiryRead, expiryCleared: state.bellExpiryCleared }),
+                set: (v) => { state.bellRead = v.read || {}; state.bellCleared = v.cleared || {}; state.bellExpiryRead = v.expiryRead || {}; state.bellExpiryCleared = v.expiryCleared || {}; },
+                onApplied: () => { if (isModalOpen("bellModal")) renderBellModal(); updateBellBadge(); } }
+  };
+
+  function isModalOpen(id){ const el = document.getElementById(id); return el && el.classList.contains("show"); }
+
+  async function persistOther(domain){
+    const d = otherDomains[domain];
+    d.lastWrite = Date.now();
+    const snapshot = JSON.stringify(d.get());
+    const ok = await safeSet(d.key, d.get(), true);
+    if (ok) d.hash = snapshot;
+    return ok;
+  }
+  function persistHistory(){ return persistOther("history"); }
+  function persistBudget(){ return persistOther("budget"); }
+  function persistPantry(){ return persistOther("pantry"); }
+  function persistBellState(){ return persistOther("bell"); }
 
   // ---------------- SYNC / POLLING ----------------
   function setSyncStatus(mode){
@@ -774,19 +837,41 @@
     setSyncStatus("synced");
   }
 
+  async function pollOthers(){
+    if (!online) return;
+    for (const name of Object.keys(otherDomains)){
+      const d = otherDomains[name];
+      // Skip if we wrote locally very recently — avoids a poll response that started before
+      // our own edit from clobbering it a moment later.
+      if (Date.now() - d.lastWrite < 2500) continue;
+      const remote = await safeGet(d.key, true);
+      if (remote === null) continue;
+      if (Date.now() - d.lastWrite < 2500) continue; // re-check: a local edit may have started mid-fetch
+      if (remote !== d.hash){
+        d.hash = remote;
+        d.set(JSON.parse(remote));
+        d.onApplied();
+      }
+    }
+  }
+
   window.addEventListener("online", () => { online = true; flushOffline(); });
   window.addEventListener("offline", () => { online = false; setSyncStatus("offline"); });
 
   async function flushOffline(){
     setSyncStatus("syncing");
     await persistItemsNow();
-    await Promise.all([persistAisle(), persistFrequency(), persistHistory(), persistBudget()]);
+    await Promise.all([
+      persistAisle(), persistFrequency(),
+      persistOther("history"), persistOther("budget"), persistOther("pantry"), persistOther("bell")
+    ]);
     setSyncStatus("synced");
   }
 
   setInterval(pollRemote, 1500);
-  window.addEventListener("focus", pollRemote);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) pollRemote(); });
+  setInterval(pollOthers, 3000);
+  window.addEventListener("focus", () => { pollRemote(); pollOthers(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden){ pollRemote(); pollOthers(); } });
 
   // ---------------- RENDER ----------------
   function renderAll(){ renderList(); renderReceipt(); renderQuickChips(); renderBudgetInputs(); }
@@ -845,7 +930,15 @@
     price.type = "number"; price.min = "0"; price.step = "0.01"; price.className = "item-price";
     price.placeholder = "price"; price.value = item.price != null ? item.price : "";
     price.title = "Price from receipt";
-    price.addEventListener("change", () => { item.price = price.value === "" ? null : parseFloat(price.value); persistItems(); renderReceipt(); });
+    price.addEventListener("change", () => {
+      if (price.value === ""){ item.price = null; }
+      else {
+        const val = parseFloat(price.value);
+        item.price = Math.max(0, isNaN(val) ? 0 : val);
+        price.value = item.price;
+      }
+      persistItems(); renderReceipt();
+    });
 
     const rm = document.createElement("button");
     rm.className = "remove-btn"; rm.textContent = "✕"; rm.title = "Remove";
@@ -862,16 +955,16 @@
     const orderedItems = state.aisleOrder.flatMap(cat => state.items.filter(i => i.category === cat));
     orderedItems.forEach(i => {
       const lineTotal = (i.price || 0) * (i.qty || 1);
-      if (i.checked && i.price) total += lineTotal;
+      if (i.checked && i.price != null) total += lineTotal;
       const line = document.createElement("div");
       line.className = "receipt-line" + (i.checked ? " checked" : "");
-      line.innerHTML = `<span class="rline-name">${i.name}${i.qty>1 ? " x"+i.qty : ""}</span><span class="rline-dots"></span><span class="rline-price">${i.price ? money(lineTotal) : "—"}</span>`;
+      line.innerHTML = `<span class="rline-name">${esc(i.name)}${i.qty>1 ? " x"+i.qty : ""}</span><span class="rline-dots"></span><span class="rline-price">${i.price != null ? money(lineTotal) : "—"}</span>`;
       lines.appendChild(line);
     });
     document.getElementById("receiptTotal").textContent = money(total);
     renderBudgetBar(total);
     const checked = state.items.filter(i => i.checked);
-    const allPriced = checked.length > 0 && checked.every(i => i.price != null && i.price > 0);
+    const allPriced = checked.length > 0 && checked.every(i => i.price != null && i.price >= 0);
     const hasBudget = (state.budget.monthly || 0) > 0;
     document.getElementById("finishBtn").disabled = !(allPriced && hasBudget);
     document.getElementById("finishBtn").title = !hasBudget ? "Set a monthly budget first" : (!allPriced ? "Enter a price for every checked item first" : "");
@@ -915,7 +1008,7 @@
     if (!name) return;
     const qty = qtyOverride || parsed.qty;
     const lower = name.toLowerCase();
-    const existing = state.items.find(i => i.name.toLowerCase() === lower && !i.checked);
+    const existing = state.items.find(i => normalizeForDedup(i.name) === normalizeForDedup(name) && !i.checked);
     if (existing){
       existing.qty += qty;
       if (priceOverride != null && existing.price == null) existing.price = priceOverride;
@@ -984,7 +1077,7 @@
       card.innerHTML = `
         <div class="trip-head"><span>${dateStr}</span><span>${money(trip.total)}</span></div>
         <div class="trip-meta">${timeStr} · ${trip.items.length} item${trip.items.length===1?"":"s"}</div>
-        <div class="trip-items">${trip.items.map(i => i.name + (i.qty>1 ? " x"+i.qty : "")).join(", ")}</div>
+        <div class="trip-items">${trip.items.map(i => esc(i.name) + (i.qty>1 ? " x"+i.qty : "")).join(", ")}</div>
       `;
 
       const toggle = document.createElement("div");
@@ -999,7 +1092,7 @@
         const priceText = i.price != null
           ? (i.qty > 1 ? `${money(i.price)} ea · ${money(lineTotal)}` : money(lineTotal))
           : "no price logged";
-        return `<div class="trip-detail-line"><span class="tdl-name">${i.name}${i.qty>1 ? " x"+i.qty : ""}</span><span class="tdl-price">${priceText}</span></div>`;
+        return `<div class="trip-detail-line"><span class="tdl-name">${esc(i.name)}${i.qty>1 ? " x"+i.qty : ""}</span><span class="tdl-price">${priceText}</span></div>`;
       }).join("") + `<div class="trip-detail-total"><span>Total</span><span>${money(trip.total)}</span></div>`;
 
       toggle.addEventListener("click", () => {
@@ -1076,7 +1169,7 @@
     matches.forEach(name => {
       const opt = document.createElement("div");
       opt.className = "opt";
-      opt.innerHTML = `<span>${name}</span><small>${state.frequency[name].category}</small>`;
+      opt.innerHTML = `<span>${esc(name)}</span><small>${esc(state.frequency[name].category)}</small>`;
       opt.addEventListener("click", () => { addItem(name); addInput.value=""; suggestBox.style.display="none"; addInput.focus(); });
       suggestBox.appendChild(opt);
     });
@@ -1089,7 +1182,8 @@
   document.getElementById("finishBtn").addEventListener("click", finishTrip);
 
   document.getElementById("budgetInput").addEventListener("change", (e) => {
-    state.budget.monthly = parseFloat(e.target.value) || 0;
+    state.budget.monthly = Math.max(0, parseFloat(e.target.value) || 0);
+    e.target.value = state.budget.monthly || "";
     persistBudget(); renderReceipt();
   });
 
@@ -1121,9 +1215,19 @@
   });
   document.getElementById("pantryRemoveSelectedBtn").addEventListener("click", () => {
     if (selectedPantryIds.size === 0) return;
+    document.getElementById("pantryRemoveConfirmText").textContent =
+      `Remove ${selectedPantryIds.size} selected item${selectedPantryIds.size===1?"":"s"}? This can't be undone.`;
+    document.getElementById("pantryRemoveConfirm").style.display = "block";
+  });
+  document.getElementById("pantryRemoveNo").addEventListener("click", () => {
+    document.getElementById("pantryRemoveConfirm").style.display = "none";
+  });
+  document.getElementById("pantryRemoveYes").addEventListener("click", () => {
     state.pantry = state.pantry.filter(p => !selectedPantryIds.has(p.id));
     selectedPantryIds.clear();
-    persistPantry(); renderPantryModal();
+    persistPantry();
+    document.getElementById("pantryRemoveConfirm").style.display = "none";
+    renderPantryModal();
   });
   document.getElementById("pantryClearListBtn").addEventListener("click", () => {
     if (state.pantry.length === 0) return;
@@ -1140,21 +1244,36 @@
     renderPantryModal();
   });
   document.getElementById("bellBtn").addEventListener("click", () => {
+    bellActiveTab = "stock";
     renderBellModal();
     document.getElementById("bellModal").classList.add("show");
   });
+  document.getElementById("bellTabStock").addEventListener("click", () => { bellActiveTab = "stock"; renderBellModal(); });
+  document.getElementById("bellTabExpiry").addEventListener("click", () => { bellActiveTab = "expiry"; renderBellModal(); });
   document.getElementById("bellMarkReadBtn").addEventListener("click", () => {
-    const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p));
-    if (lowItems.length === 0) return;
-    lowItems.forEach(p => { state.bellRead[p.id] = p.qty; });
+    if (bellActiveTab === "stock"){
+      const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p));
+      if (lowItems.length === 0) return;
+      lowItems.forEach(p => { state.bellRead[p.id] = p.qty; });
+    } else {
+      const nearItems = state.pantry.filter(p => isNearExpiry(p) && !isBellExpiryCleared(p));
+      if (nearItems.length === 0) return;
+      nearItems.forEach(p => { state.bellExpiryRead[p.id] = expiryBucket(p); });
+    }
     persistBellState();
     renderBellModal();
     updateBellBadge();
   });
   document.getElementById("bellClearBtn").addEventListener("click", () => {
-    const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p));
-    if (lowItems.length === 0) return;
-    lowItems.forEach(p => { state.bellCleared[p.id] = p.qty; state.bellRead[p.id] = p.qty; });
+    if (bellActiveTab === "stock"){
+      const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p));
+      if (lowItems.length === 0) return;
+      lowItems.forEach(p => { state.bellCleared[p.id] = p.qty; state.bellRead[p.id] = p.qty; });
+    } else {
+      const nearItems = state.pantry.filter(p => isNearExpiry(p) && !isBellExpiryCleared(p));
+      if (nearItems.length === 0) return;
+      nearItems.forEach(p => { state.bellExpiryCleared[p.id] = expiryBucket(p); state.bellExpiryRead[p.id] = expiryBucket(p); });
+    }
     persistBellState();
     renderBellModal();
     updateBellBadge();
@@ -1237,7 +1356,7 @@
       const displayName = curatedMatch || (lower.charAt(0).toUpperCase() + lower.slice(1));
       const chip = document.createElement("div");
       chip.className = "suggest-item";
-      chip.innerHTML = `<span class="plus">+</span><span class="label-text">${displayName}</span>`;
+      chip.innerHTML = `<span class="plus">+</span><span class="label-text">${esc(displayName)}</span>`;
       chip.addEventListener("click", () => {
         addItem(displayName, 1);
         chip.classList.add("added");
@@ -1287,14 +1406,34 @@
 
   function isLowStock(p){ return p.qty <= LOW_STOCK_THRESHOLD; }
 
+  // Reminders fire at 10, 7, 5, 3, and 1 day(s) before expiry (plus "expires today" and
+  // "expired" as their own more-urgent states). Between milestones, an item stays visible in
+  // the Near Expiration tab, but only actually re-flags as a fresh/unread notification once
+  // it crosses into the NEXT milestone's window — otherwise checking the bell every hour would
+  // just re-notify you about the same thing all day.
+  const EXPIRY_MILESTONES = [1, 3, 5, 7, 10]; // ascending — order matters for bucketing below
+  function expiryBucket(p){
+    const d = daysUntil(p.expiry);
+    if (d === null || d > 10) return null;   // no expiry set, or not near yet — not shown
+    if (d < 0) return "expired";
+    if (d === 0) return "today";
+    for (const m of EXPIRY_MILESTONES){ if (d <= m) return "m" + m; }
+    return "m10";
+  }
+  function isNearExpiry(p){ return expiryBucket(p) !== null; }
+
   function isBellCleared(p){ return state.bellCleared[p.id] === p.qty; }
   function isBellRead(p){ return state.bellRead[p.id] === p.qty; }
+  function isBellExpiryCleared(p){ return state.bellExpiryCleared[p.id] === expiryBucket(p); }
+  function isBellExpiryRead(p){ return state.bellExpiryRead[p.id] === expiryBucket(p); }
 
   function updateBellBadge(){
-    // The bell is specifically about low/out-of-stock reminders (threshold = 5), not expiry.
-    // Only counts items that are unread AND not cleared — a qty change (restock or further
-    // drop) invalidates a prior read/clear snapshot, so it becomes "new" again automatically.
-    const count = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p) && !isBellRead(p)).length;
+    // Combined count across both tabs — low/out-of-stock (threshold = 5) and near-expiration
+    // (10/7/5/3/1-day milestones). Only counts items that are unread AND not cleared; a qty
+    // change or crossing into a new expiry milestone invalidates a prior ack automatically.
+    const stockCount = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p) && !isBellRead(p)).length;
+    const expiryCount = state.pantry.filter(p => isNearExpiry(p) && !isBellExpiryCleared(p) && !isBellExpiryRead(p)).length;
+    const count = stockCount + expiryCount;
     const badge = document.getElementById("bellBadge");
     badge.textContent = count > 9 ? "9+" : String(count);
     badge.style.display = count > 0 ? "flex" : "none";
@@ -1305,8 +1444,7 @@
   // no expiration date is assumed (we don't know shelf life) unless one is set afterward.
   function upsertPantryFromPurchase(checkedItems){
     checkedItems.forEach(ci => {
-      const lower = ci.name.toLowerCase();
-      const existing = state.pantry.find(p => p.name.toLowerCase() === lower);
+      const existing = state.pantry.find(p => normalizeForDedup(p.name) === normalizeForDedup(ci.name));
       if (existing){ existing.qty = (existing.qty || 0) + (ci.qty || 1); existing.purchased = todayStr(); }
       else {
         state.pantry.push({ id: uid(), name: ci.name, category: categorize(ci.name), qty: ci.qty || 1, purchased: todayStr(), expiry: null });
@@ -1317,8 +1455,7 @@
 
   function addPantryItem(name, qty, purchased, expiry){
     if (!name.trim()) return;
-    const lower = name.trim().toLowerCase();
-    const existing = state.pantry.find(p => p.name.toLowerCase() === lower);
+    const existing = state.pantry.find(p => normalizeForDedup(p.name) === normalizeForDedup(name));
     if (existing){
       existing.qty = (existing.qty || 0) + qty;
       existing.purchased = purchased || todayStr();
@@ -1350,6 +1487,7 @@
   function renderPantryModal(){
     const wrap = document.getElementById("pantryList");
     wrap.innerHTML = "";
+    document.getElementById("pantryRemoveConfirm").style.display = "none";
     document.getElementById("pantrySelectAllBtn").disabled = state.pantry.length === 0;
     document.getElementById("pantryClearListBtn").disabled = state.pantry.length === 0;
     if (state.pantry.length === 0){
@@ -1406,7 +1544,7 @@
     const nameWrap = document.createElement("div");
     nameWrap.className = "p-name-wrap";
     const status = pantryStatus(p);
-    nameWrap.innerHTML = `<div class="p-name">${p.name}</div>`
+    nameWrap.innerHTML = `<div class="p-name">${esc(p.name)}</div>`
       + (showCategoryTag ? `<div class="p-cat">${p.category}</div>` : "")
       + (status ? `<div class="p-status ${status.cls}">${status.label}</div>` : "");
 
@@ -1464,54 +1602,76 @@
     return row;
   }
 
+  let bellActiveTab = "stock";
+
+  function renderBellRow(wrap, p, unread, statusText, statusCls){
+    const item = document.createElement("div");
+    item.className = "bell-list-item" + (unread ? "" : " read");
+    const qtyClass = statusCls === "expired" || statusCls === "out" ? "" : "warn";
+    item.innerHTML = `<div style="display:flex; align-items:center;">${unread ? `<span class="b-new-dot"></span>` : ""}<div><div class="b-name">${esc(p.name)}</div><div class="b-qty ${qtyClass}">${statusText}</div></div></div>`;
+    const addBtn = document.createElement("button");
+    addBtn.className = "p-add-btn"; addBtn.textContent = "+ List";
+    addBtn.addEventListener("click", () => { addItem(p.name, 1); addBtn.textContent = "Added"; setTimeout(() => addBtn.textContent = "+ List", 900); });
+    item.appendChild(addBtn);
+    wrap.appendChild(item);
+  }
+
   function renderBellModal(){
     const wrap = document.getElementById("bellList");
     wrap.innerHTML = "";
+
     // Prune ack entries for items no longer in pantry, keeps storage tidy long-term.
     const validIds = new Set(state.pantry.map(p => p.id));
     let pruned = false;
-    [state.bellRead, state.bellCleared].forEach(map => {
+    [state.bellRead, state.bellCleared, state.bellExpiryRead, state.bellExpiryCleared].forEach(map => {
       Object.keys(map).forEach(id => { if (!validIds.has(id)){ delete map[id]; pruned = true; } });
     });
     if (pruned) persistBellState();
 
-    const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p)).sort((a,b) => a.qty - b.qty);
-    document.getElementById("bellMarkReadBtn").disabled = lowItems.length === 0;
-    document.getElementById("bellClearBtn").disabled = lowItems.length === 0;
-    if (lowItems.length === 0){
-      wrap.innerHTML = `<div class="empty-state" style="padding:24px 10px;"><div class="big">All clear</div>Nothing in your pantry is running low right now.</div>`;
-      return;
+    document.getElementById("bellTabStock").classList.toggle("active", bellActiveTab === "stock");
+    document.getElementById("bellTabExpiry").classList.toggle("active", bellActiveTab === "expiry");
+    const stockUnread = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p) && !isBellRead(p)).length;
+    const expiryUnread = state.pantry.filter(p => isNearExpiry(p) && !isBellExpiryCleared(p) && !isBellExpiryRead(p)).length;
+    document.getElementById("bellTabStock").innerHTML = `Low Stock${stockUnread > 0 ? `<span class="tab-count">${stockUnread}</span>` : ""}`;
+    document.getElementById("bellTabExpiry").innerHTML = `Near Expiration${expiryUnread > 0 ? `<span class="tab-count">${expiryUnread}</span>` : ""}`;
+
+    if (bellActiveTab === "stock"){
+      document.getElementById("bellTabDesc").textContent = "Items at 5 or fewer in your pantry.";
+      const lowItems = state.pantry.filter(p => isLowStock(p) && !isBellCleared(p)).sort((a,b) => a.qty - b.qty);
+      document.getElementById("bellMarkReadBtn").disabled = lowItems.length === 0;
+      document.getElementById("bellClearBtn").disabled = lowItems.length === 0;
+      if (lowItems.length === 0){
+        wrap.innerHTML = `<div class="empty-state" style="padding:24px 10px;"><div class="big">All clear</div>Nothing in your pantry is running low right now.</div>`;
+        return;
+      }
+      lowItems.forEach(p => {
+        const statusText = p.qty <= 0 ? "Out of stock" : p.qty + " left";
+        renderBellRow(wrap, p, !isBellRead(p), statusText, p.qty <= 0 ? "out" : "low");
+      });
+    } else {
+      document.getElementById("bellTabDesc").textContent = "Items expiring within 10 days (reminders at 10, 7, 5, 3, and 1 day out).";
+      const nearItems = state.pantry.filter(p => isNearExpiry(p) && !isBellExpiryCleared(p))
+        .sort((a,b) => daysUntil(a.expiry) - daysUntil(b.expiry));
+      document.getElementById("bellMarkReadBtn").disabled = nearItems.length === 0;
+      document.getElementById("bellClearBtn").disabled = nearItems.length === 0;
+      if (nearItems.length === 0){
+        wrap.innerHTML = `<div class="empty-state" style="padding:24px 10px;"><div class="big">Nothing expiring soon</div>No pantry items are within 10 days of their expiration date.</div>`;
+        return;
+      }
+      nearItems.forEach(p => {
+        const d = daysUntil(p.expiry);
+        const statusText = d < 0 ? "Expired" : d === 0 ? "Expires today" : `Expires in ${d}d`;
+        renderBellRow(wrap, p, !isBellExpiryRead(p), statusText, d < 0 ? "expired" : "expiring");
+      });
     }
-    lowItems.forEach(p => {
-      const unread = !isBellRead(p);
-      const item = document.createElement("div");
-      item.className = "bell-list-item" + (unread ? "" : " read");
-      item.innerHTML = `<div style="display:flex; align-items:center;">${unread ? `<span class="b-new-dot"></span>` : ""}<div><div class="b-name">${p.name}</div><div class="b-qty">${p.qty <= 0 ? "Out of stock" : p.qty + " left"}</div></div></div>`;
-      const addBtn = document.createElement("button");
-      addBtn.className = "p-add-btn"; addBtn.textContent = "+ List";
-      addBtn.addEventListener("click", () => { addItem(p.name, 1); addBtn.textContent = "Added"; setTimeout(() => addBtn.textContent = "+ List", 900); });
-      item.appendChild(addBtn);
-      wrap.appendChild(item);
-    });
   }
 
   // ---------------- INIT ----------------
   setSyncStatus(online ? "syncing" : "offline");
-  (async () => {
-    if (!window.storage){
-      // firebase-storage.js loads as an ES module and may not have attached window.storage yet.
-      await new Promise((resolve) => {
-        window.addEventListener("storage-ready", resolve, { once:true });
-        // Fallback in case the event already fired before this listener attached.
-        setTimeout(() => { if (window.storage) resolve(); }, 50);
-      });
-    }
-    await loadAll();
-    setSyncStatus(online ? "synced" : "offline");
-  })();
+  loadAll().then(() => setSyncStatus(online ? "synced" : "offline"));
 
 })();
 </script>
-<div class="version-tag">TidyCart __APP_VERSION__</div>
+<div class="version-tag">TidyCart v1.0.0</div>
 </body>
 </html>
