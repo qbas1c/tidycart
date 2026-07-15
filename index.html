@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f5132">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <title>TidyCart — Shared Grocery List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -26,6 +31,7 @@
     --radius-sm: 12px;
   }
   *{box-sizing:border-box;}
+  html, body{ overscroll-behavior:none; }
   body{
     margin:0;
     background:
@@ -35,7 +41,12 @@
     color:var(--ink);
     font-family:'Inter', sans-serif;
     min-height:100vh;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
   }
+  input, textarea{ -webkit-user-select:text; user-select:text; }
   #app{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:26px 20px 90px; }
 
   /* ---------- Header ---------- */
@@ -53,6 +64,7 @@
     width:42px; height:42px; border-radius:13px; flex-shrink:0;
     overflow:hidden; box-shadow:0 6px 14px rgba(15,81,50,0.25);
   }
+  .brand .mark img{ width:100%; height:100%; display:block; object-fit:cover; }
   .brand h1{
     font-family:'Manrope', sans-serif; font-weight:800;
     font-size:30px; letter-spacing:-0.5px; margin:0; color:var(--ink); line-height:1.1;
@@ -395,13 +407,7 @@
 
   <header>
     <div class="brand">
-      <div class="mark"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
-        <rect width="1024" height="1024" rx="230" fill="#E1F5EE"/>
-        <path d="M330 460 h95 l95 355 h355 l82 -260 h-497" fill="none" stroke="#0F6E56" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="470" cy="900" r="42" fill="none" stroke="#0F6E56" stroke-width="30"/>
-        <circle cx="740" cy="900" r="42" fill="none" stroke="#0F6E56" stroke-width="30"/>
-        <path d="M655 480 l40 40 l80 -80" fill="none" stroke="#0F6E56" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg></div>
+      <div class="mark"><img src="icon.svg" alt="TidyCart logo"></div>
       <div>
         <h1>TidyCart</h1>
         <div class="sub">household grocery &amp; to-do, sorted fast</div>
@@ -583,6 +589,7 @@
 </div>
 
 
+<script type="module" src="firebase-storage.js"></script>
 <script>
 (function(){
   "use strict";
@@ -691,11 +698,11 @@
   // ---------------- STORAGE ----------------
   async function safeGet(key, shared){
     try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }
-    catch(e){ return null; }
+    catch(e){ console.error("TidyCart: failed to read \"" + key + "\":", e); return null; }
   }
   async function safeSet(key, value, shared){
     try{ await window.storage.set(key, JSON.stringify(value), shared); return true; }
-    catch(e){ return false; }
+    catch(e){ console.error("TidyCart: failed to save \"" + key + "\":", e); return false; }
   }
 
   async function loadAll(){
@@ -889,17 +896,24 @@
   setInterval(pollRemote, 1500);
   setInterval(pollOthers, 3000);
   window.addEventListener("focus", () => { pollRemote(); pollOthers(); });
+
+  function emergencyFlush(){
+    if (!persistTimer) return; // nothing pending, natural debounce already handled it
+    // Fire both: the normal SDK write (works fine if we get enough time) AND a raw
+    // fetch+keepalive write, which browsers specifically guarantee gets a chance to
+    // complete even after the page itself is torn down — unlike the SDK's WebSocket
+    // connection, which mobile browsers can suspend within milliseconds of backgrounding,
+    // often before an in-flight write actually reaches Firebase.
+    persistItemsNow();
+    if (window.storage && typeof window.storage.flushSync === "function"){
+      window.storage.flushSync("tally:items", state.items, true);
+    }
+  }
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden){ pollRemote(); pollOthers(); }
-    else {
-      // The page is being backgrounded/closed — this is the last reliable moment we get.
-      // If a debounced write is still waiting on its 250ms timer, force it out now instead
-      // of risking it never firing at all (closing a tab or locking the phone can kill
-      // pending timers before they run).
-      if (persistTimer) persistItemsNow();
-    }
+    else emergencyFlush();
   });
-  window.addEventListener("pagehide", () => { if (persistTimer) persistItemsNow(); });
+  window.addEventListener("pagehide", emergencyFlush);
 
   // ---------------- RENDER ----------------
   function renderAll(){ renderList(); renderReceipt(); renderQuickChips(); renderBudgetInputs(); }
@@ -1734,10 +1748,21 @@
 
   // ---------------- INIT ----------------
   setSyncStatus(online ? "syncing" : "offline");
-  loadAll().then(() => setSyncStatus(online ? "synced" : "offline"));
+  (async () => {
+    if (!window.storage){
+      // firebase-storage.js loads as an ES module and may not have attached window.storage yet.
+      await new Promise((resolve) => {
+        window.addEventListener("storage-ready", resolve, { once:true });
+        // Fallback in case the event already fired before this listener attached.
+        setTimeout(() => { if (window.storage) resolve(); }, 50);
+      });
+    }
+    await loadAll();
+    setSyncStatus(online ? "synced" : "offline");
+  })();
 
 })();
 </script>
-<div class="version-tag">TidyCart v1.0.0</div>
+<div class="version-tag">TidyCart __APP_VERSION__</div>
 </body>
 </html>
